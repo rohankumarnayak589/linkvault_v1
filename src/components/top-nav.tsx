@@ -16,7 +16,7 @@ import {
   FileEdit, Download, Upload, Menu, MoreHorizontal, Palette,
 } from "lucide-react";
 import { THEMES } from "@/lib/icon-mapper";
-import { UserButton, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { UserButton, SignInButton, useUser } from "@clerk/nextjs";
 
 interface TopNavProps {
   filters: SearchFilters;
@@ -39,6 +39,7 @@ export function TopNav({
   currentTheme, onThemeChange,
 }: TopNavProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isSignedIn } = useUser();
 
   return (
     <div className="bg-card/80 backdrop-blur-sm border-b border-border px-5 py-3 flex items-center gap-3 shrink-0 z-20">
@@ -128,10 +129,10 @@ export function TopNav({
         <DropdownMenuTrigger className="hidden md:flex p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => onExport("json")}><Download className="h-4 w-4 mr-2" /> Export JSON</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onExport("csv")}><Download className="h-4 w-4 mr-2" /> Export CSV</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onExport("html")}><Download className="h-4 w-4 mr-2" /> Export HTML</DropdownMenuItem>
+        <DropdownMenuContent align="end" className="w-[130px]">
+          <DropdownMenuItem onClick={() => onExport("json")}><Download className="h-4 w-4 mr-2" /> JSON</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onExport("csv")}><Download className="h-4 w-4 mr-2" /> CSV</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onExport("html")}><Download className="h-4 w-4 mr-2" /> HTML</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => fileInputRef.current?.click()}><Upload className="h-4 w-4 mr-2" /> Import</DropdownMenuItem>
         </DropdownMenuContent>
@@ -151,7 +152,7 @@ export function TopNav({
 
       {/* Auth UI */}
       <div className="flex items-center gap-2 pl-2 border-l border-border/50 ml-1">
-        <SignedIn>
+        {isSignedIn ? (
           <UserButton
             appearance={{
               elements: {
@@ -160,14 +161,13 @@ export function TopNav({
               },
             }}
           />
-        </SignedIn>
-        <SignedOut>
+        ) : (
           <SignInButton mode="modal">
-            <Button variant="ghost" size="sm" className="text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl px-4">
+            <Button variant="ghost" size="sm" className="text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl px-4 text-nowrap">
               Sign In
             </Button>
           </SignInButton>
-        </SignedOut>
+        )}
       </div>
     </div>
   );
