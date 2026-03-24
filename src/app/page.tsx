@@ -9,6 +9,8 @@ import {
   Smartphone, Mail, MessageSquare, Star
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
+import { applyTheme, getSavedTheme } from "@/lib/icon-mapper";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -28,6 +30,11 @@ const staggerContainer = {
 };
 
 export default function LandingPage() {
+  useEffect(() => {
+    const saved = getSavedTheme("linkvault-landing-theme");
+    applyTheme(saved, "linkvault-landing-theme");
+  }, []);
+
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20 selection:text-primary scroll-smooth">
       <LandingNav />

@@ -1,12 +1,27 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useUser, UserButton } from "@clerk/nextjs";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sun, Moon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { applyTheme, getSavedTheme } from "@/lib/icon-mapper";
+import Link from "next/link";
 
 export function LandingNav() {
   const { isSignedIn } = useUser();
+  const [currentTheme, setCurrentTheme] = useState<"ivory-warm" | "midnight">("ivory-warm");
+
+  useEffect(() => {
+    const saved = getSavedTheme("linkvault-landing-theme") as "ivory-warm" | "midnight";
+    setCurrentTheme(saved === "midnight" ? "midnight" : "ivory-warm");
+  }, []);
+
+  const toggleTheme = () => {
+    const next = currentTheme === "ivory-warm" ? "midnight" : "ivory-warm";
+    setCurrentTheme(next);
+    applyTheme(next, "linkvault-landing-theme");
+  };
 
   return (
     <motion.nav 
@@ -28,6 +43,25 @@ export function LandingNav() {
         </div>
 
         <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleTheme}
+            className="rounded-xl hover:bg-secondary/50 transition-colors"
+          >
+            <AnimatePresence mode="wait">
+              {currentTheme === "ivory-warm" ? (
+                <motion.div key="sun" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <Sun className="h-5 w-5" />
+                </motion.div>
+              ) : (
+                <motion.div key="moon" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <Moon className="h-5 w-5" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Button>
+
           {isSignedIn ? (
             <div className="flex items-center gap-4">
               <Link href="/dashboard">

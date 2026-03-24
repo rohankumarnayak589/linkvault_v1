@@ -306,7 +306,7 @@ export const THEMES: ThemeConfig[] = [
 /**
  * Apply a theme by setting CSS custom properties on <html>
  */
-export function applyTheme(themeName: ThemeName): void {
+export function applyTheme(themeName: ThemeName, storageKey: string = "linkvault-dashboard-theme"): void {
   const theme = THEMES.find((t) => t.name === themeName);
   if (!theme) return;
 
@@ -344,13 +344,13 @@ export function applyTheme(themeName: ThemeName): void {
     root.classList.remove("dark-theme");
   }
 
-  localStorage.setItem("linkvault-theme", themeName);
+  localStorage.setItem(storageKey, themeName);
 }
 
 /**
- * Get saved theme from localStorage, default to ivory-warm
+ * Get saved theme from localStorage
  */
-export function getSavedTheme(): ThemeName {
+export function getSavedTheme(storageKey: string = "linkvault-dashboard-theme"): ThemeName {
   if (typeof window === "undefined") return "ivory-warm";
-  return (localStorage.getItem("linkvault-theme") as ThemeName) || "ivory-warm";
+  return (localStorage.getItem(storageKey) as ThemeName) || "ivory-warm";
 }
