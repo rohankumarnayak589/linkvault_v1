@@ -16,6 +16,7 @@ import {
   FileEdit, Download, Upload, Menu, MoreHorizontal, Palette,
 } from "lucide-react";
 import { THEMES } from "@/lib/icon-mapper";
+import { UserButton, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 interface TopNavProps {
   filters: SearchFilters;
@@ -147,6 +148,27 @@ export function TopNav({
         <Plus className="h-4 w-4" />
         Add
       </Button>
+
+      {/* Auth UI */}
+      <div className="flex items-center gap-2 pl-2 border-l border-border/50 ml-1">
+        <SignedIn>
+          <UserButton
+            appearance={{
+              elements: {
+                userButtonAvatarBox: "h-8 w-8",
+                userButtonTrigger: "hover:scale-[1.05] transition-all",
+              },
+            }}
+          />
+        </SignedIn>
+        <SignedOut>
+          <SignInButton mode="modal">
+            <Button variant="ghost" size="sm" className="text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl px-4">
+              Sign In
+            </Button>
+          </SignInButton>
+        </SignedOut>
+      </div>
     </div>
   );
 }

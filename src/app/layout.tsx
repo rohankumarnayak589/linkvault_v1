@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -28,11 +29,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans">
-        <TooltipProvider>{children}</TooltipProvider>
-        <Toaster richColors position="bottom-right" />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`${inter.variable} h-full antialiased`}>
+        <body className="min-h-full flex flex-col font-sans">
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster richColors position="bottom-right" />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
