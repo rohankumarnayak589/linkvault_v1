@@ -35,6 +35,7 @@ export function AddBookmarkDialog({
   const [tagInput, setTagInput] = useState("");
   const [notes, setNotes] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   const [fetching, setFetching] = useState(false);
 
   const isEditing = !!editingBookmark;
@@ -49,9 +50,10 @@ export function AddBookmarkDialog({
       setTags(editingBookmark.tags);
       setNotes(editingBookmark.notes);
       setIsFavorite(editingBookmark.isFavorite);
+      setIsPinned(editingBookmark.isPinned || false);
     } else if (open) {
       setUrl(""); setTitle(""); setDescription(""); setFavicon("");
-      setFolderId(null); setTags([]); setTagInput(""); setNotes(""); setIsFavorite(false);
+      setFolderId(null); setTags([]); setTagInput(""); setNotes(""); setIsFavorite(false); setIsPinned(false);
     }
   }, [open, editingBookmark]);
 
@@ -88,7 +90,7 @@ export function AddBookmarkDialog({
     const data = {
       url: url.trim(), title: title.trim() || url.trim(), description: description.trim(),
       favicon, previewImage: "", tags, folderId, notes: notes.trim(),
-      isFavorite, isArchived: false,
+      isFavorite, isPinned, isArchived: false,
     };
     if (isEditing && editingBookmark) {
       onUpdate(editingBookmark.id, data);
