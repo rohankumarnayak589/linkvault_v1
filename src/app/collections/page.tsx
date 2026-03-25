@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { Folder, Bookmark, ThemeName } from "@/lib/types";
 import { getAllFolders, getAllBookmarks, addFolder, deleteFolder, updateFolder, updateBookmark, seedSampleData } from "@/lib/db";
 import { getCollectionIcon, getCollectionColor, applyTheme, getSavedTheme } from "@/lib/icon-mapper";
+import { getAllTags } from "@/lib/search";
 import { Sidebar } from "@/components/sidebar";
 import { Input } from "@/components/ui/input";
 import { Plus, ArrowLeft, Trash2 } from "lucide-react";
@@ -85,7 +86,7 @@ export default function CollectionsPage() {
   const favoritesCount = bookmarks.filter((b) => b.isFavorite).length;
   const recentCount = bookmarks.filter((b) => new Date().getTime() - new Date(b.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000).length;
   const bookmarkCounts = bookmarks.reduce((acc, b) => { const k = b.folderId || "__root__"; acc[k] = (acc[k] || 0) + 1; return acc; }, {} as Record<string, number>);
-  const allTags = [...new Set(bookmarks.flatMap((b) => b.tags))].sort();
+  const allTags = useMemo(() => getAllTags(bookmarks), [bookmarks]);
 
   if (loading) {
     return (

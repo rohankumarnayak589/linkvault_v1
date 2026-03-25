@@ -49,11 +49,17 @@ export function searchBookmarks(bookmarks: Bookmark[], filters: SearchFilters): 
 }
 
 export function getAllTags(bookmarks: Bookmark[]): string[] {
-  const tagSet = new Set<string>();
+  const tagCounts: Record<string, number> = {};
   for (const b of bookmarks) {
+    if (b.isDeleted) continue;
     for (const t of b.tags) {
-      tagSet.add(t);
+      tagCounts[t] = (tagCounts[t] || 0) + 1;
     }
   }
-  return Array.from(tagSet).sort();
+  // Sort by frequency descending, then alphabetically
+  return Object.keys(tagCounts).sort((a, b) => {
+    const freqDiff = tagCounts[b] - tagCounts[a];
+    if (freqDiff !== 0) return freqDiff;
+    return a.localeCompare(b);
+  });
 }

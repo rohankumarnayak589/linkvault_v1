@@ -274,7 +274,7 @@ export function Sidebar({
   }
 
   return (
-    <div className="w-[260px] bg-sidebar border-r border-sidebar-border flex flex-col shrink-0 animate-slideIn">
+    <div className="w-[260px] bg-sidebar border-r border-sidebar-border flex flex-col h-full shrink-0 animate-slideIn overflow-hidden">
       {/* Logo */}
       <div className="px-4 pt-5 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -290,7 +290,7 @@ export function Sidebar({
 
       <ScrollArea className="flex-1 px-3 py-1">
         {/* Main Navigation */}
-        <div className="space-y-0.5 mb-4">
+        <div className="space-y-0.5 mb-1 px-3">
           <NavButton
             emoji="📚" label="All Bookmarks" count={totalCount}
             onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
@@ -318,7 +318,9 @@ export function Sidebar({
           />
         </div>
 
-        <Separator className="mb-4 opacity-50" />
+        <div className="px-3">
+          <Separator className="my-4 opacity-50" />
+        </div>
 
         {/* Collections */}
         <div className="mb-4">
@@ -365,22 +367,24 @@ export function Sidebar({
           )}
         </div>
 
-        <Separator className="mb-4 opacity-50" />
+        <div className="px-3">
+          <Separator className="my-4 opacity-50" />
+        </div>
 
         {/* Tags */}
-        <div className="mb-4">
-          <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
-            🏷️ Tags
+        <div className="mb-8">
+          <p className="px-3 mb-3 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 flex items-center gap-2">
+            🏷️ Top Tags
           </p>
           <div className="flex flex-wrap gap-1.5 px-3">
-            {allTags.slice(0, 15).map((tag) => (
+            {allTags.slice(0, 12).map((tag) => (
               <Badge
                 key={tag}
                 variant={filters.tags.includes(tag) ? "default" : "secondary"}
-                className={`cursor-pointer text-[11px] py-0.5 px-2.5 rounded-full font-medium transition-all duration-150 ${
+                className={`cursor-pointer text-[10px] py-0.5 px-2.5 rounded-full font-medium transition-all duration-150 ${
                   filters.tags.includes(tag)
                     ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground"
+                    : "bg-secondary/60 text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
                 onClick={() => {
                   const newTags = filters.tags.includes(tag)
@@ -392,6 +396,9 @@ export function Sidebar({
                 {tag}
               </Badge>
             ))}
+            {allTags.length === 0 && (
+              <p className="px-3 text-[10px] text-muted-foreground/50 italic py-1">No tags yet</p>
+            )}
           </div>
         </div>
       </ScrollArea>
