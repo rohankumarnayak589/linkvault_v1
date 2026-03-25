@@ -77,11 +77,16 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html, body {
+    height: 100%;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    flex-direction: column;
   }
   html {
     @apply font-sans;

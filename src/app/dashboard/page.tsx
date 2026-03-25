@@ -18,6 +18,7 @@ import { Sidebar } from "@/components/sidebar";
 import { BookmarkGrid } from "@/components/bookmark-grid";
 import { BookmarkList } from "@/components/bookmark-list";
 import { AddBookmarkDialog } from "@/components/add-bookmark-dialog";
+import { CommandPalette } from "@/components/command-palette";
 import { TopNav } from "@/components/top-nav";
 import { toast } from "sonner";
 import { Plus, Star, Pin } from "lucide-react";
@@ -36,6 +37,7 @@ function DashboardContent() {
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentTheme, setCurrentTheme] = useState<ThemeName>("ivory-warm");
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     query: "", folderId: null, tags: [], favoritesOnly: false, dateFrom: null, dateTo: null,
   });
@@ -75,10 +77,13 @@ function DashboardContent() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Ctrl+K shortcut
+  // Ctrl+K shortcut — opens Command Palette
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); setShowAddDialog(true); }
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -454,6 +459,14 @@ function DashboardContent() {
         open={showAddDialog} onOpenChange={(open: boolean) => { setShowAddDialog(open); if (!open) setEditingBookmark(null); }}
         onSave={handleAddBookmark} onUpdate={handleUpdateBookmark}
         editingBookmark={editingBookmark} folders={folders} existingTags={allTags}
+      />
+
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        bookmarks={bookmarks}
+        onOpen={(bookmark) => { handleOpenBookmark(bookmark); }}
+        onFilterTag={(tag) => setFilters(prev => ({ ...prev, tags: [tag], folderId: null, favoritesOnly: false }))}
       />
     </div>
   );

@@ -6,8 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { ThemePicker } from "@/components/theme-picker";
-import { getCollectionIcon, getCollectionColor, THEMES } from "@/lib/icon-mapper";
+import { THEMES } from "@/lib/icon-mapper";
 import {
   ChevronRight,
   ChevronDown,
@@ -15,8 +14,7 @@ import {
   X,
   PanelLeftClose,
   PanelLeft,
-  Settings,
-  LayoutGrid,
+  Share2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -134,51 +132,39 @@ export function Sidebar({
       <div key={folder.id}>
         <DropdownMenu>
           <div
-            className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] font-medium transition-all duration-150 ${
+            className={`group flex items-center gap-2 py-2 rounded-lg cursor-pointer text-[13px] font-medium transition-all duration-150 ${
               isActive
                 ? "sidebar-item-active"
                 : "hover:bg-secondary/80 text-muted-foreground hover:text-foreground"
             }`}
-            style={{ paddingLeft: `${12 + depth * 16}px` }}
+            style={{ paddingLeft: `${12 + depth * 16}px`, paddingRight: "8px" }}
             onClick={() =>
-              onFilterChange({
-                ...filters,
-                folderId: isActive ? null : folder.id,
-                favoritesOnly: false,
-              })
+              onFilterChange({ ...filters, folderId: isActive ? null : folder.id, favoritesOnly: false })
             }
             onDragOver={(e) => {
               e.preventDefault();
-              e.currentTarget.classList.add("bg-primary/20", "border-primary/50", "ring-2", "ring-primary/20");
+              e.currentTarget.classList.add("bg-primary/20", "ring-2", "ring-primary/40", "ring-inset");
             }}
             onDragLeave={(e) => {
-              e.currentTarget.classList.remove("bg-primary/20", "border-primary/50", "ring-2", "ring-primary/20");
+              e.currentTarget.classList.remove("bg-primary/20", "ring-2", "ring-primary/40", "ring-inset");
             }}
             onDrop={(e) => {
               e.preventDefault();
-              e.currentTarget.classList.remove("bg-primary/20", "border-primary/50", "ring-2", "ring-primary/20");
+              e.currentTarget.classList.remove("bg-primary/20", "ring-2", "ring-primary/40", "ring-inset");
               const bookmarkId = e.dataTransfer.getData("bookmarkId");
               if (bookmarkId) onMoveBookmark(bookmarkId, folder.id);
             }}
           >
             {children.length > 0 ? (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleExpand(folder.id);
-                }}
-                className="p-0.5 hover:bg-accent rounded transition-colors"
+                onClick={(e) => { e.stopPropagation(); toggleExpand(folder.id); }}
+                className="p-0.5 hover:bg-accent rounded transition-colors shrink-0"
               >
-                {isExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5" />
-                ) : (
-                  <ChevronRight className="h-3.5 w-3.5" />
-                )}
+                {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
               </button>
             ) : (
-              <span className="w-4" />
+              <span className="w-4 shrink-0" />
             )}
-            {/* Color dot + emoji */}
             <span
               className="w-5 h-5 rounded-md flex items-center justify-center text-xs shrink-0"
               style={{ backgroundColor: folder.color || "#F5F0EB" }}
@@ -187,39 +173,39 @@ export function Sidebar({
             </span>
             <span className="truncate flex-1">{folder.name}</span>
             {count > 0 && (
-              <span className="text-[11px] min-w-5 h-5 flex items-center justify-center rounded-full bg-secondary text-muted-foreground font-semibold">
+              <span className="text-[10px] min-w-4 h-4 flex items-center justify-center rounded-full bg-secondary text-muted-foreground font-semibold shrink-0 px-1">
                 {count}
               </span>
             )}
             <DropdownMenuTrigger
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent rounded-lg transition-all"
+              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent rounded-lg transition-all shrink-0"
             >
               <span className="text-xs font-bold">⋯</span>
             </DropdownMenuTrigger>
           </div>
-          <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem
-              onClick={() => {
-                setAddingParentId(folder.id);
-                setAddingFolder(true);
-                if (!expandedFolders.has(folder.id)) toggleExpand(folder.id);
-              }}
-            >
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem onClick={() => {
+              setAddingParentId(folder.id);
+              setAddingFolder(true);
+              if (!expandedFolders.has(folder.id)) toggleExpand(folder.id);
+            }}>
               <Plus className="h-4 w-4 mr-2" /> Add subfolder
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                const name = prompt("Rename collection:", folder.name);
-                if (name) onRenameFolder(folder.id, name);
-              }}
-            >
+            <DropdownMenuItem onClick={() => {
+              const name = prompt("Rename collection:", folder.name);
+              if (name) onRenameFolder(folder.id, name);
+            }}>
               ✏️ Rename
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => onDeleteFolder(folder.id)}
-            >
+            <DropdownMenuItem onClick={() => {
+              const url = `${window.location.origin}/share/${folder.id}`;
+              navigator.clipboard.writeText(url);
+              alert(`Share link copied!\n${url}`);
+            }}>
+              <Share2 className="h-4 w-4 mr-2" /> Share
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onClick={() => onDeleteFolder(folder.id)}>
               🗑️ Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -227,23 +213,15 @@ export function Sidebar({
 
         {isExpanded && children.map((c) => renderFolder(c, depth + 1))}
         {isExpanded && addingFolder && addingParentId === folder.id && (
-          <div
-            className="flex items-center gap-1.5 px-3 py-1"
-            style={{ paddingLeft: `${28 + depth * 16}px` }}
-          >
+          <div className="flex items-center gap-1.5 px-3 py-1" style={{ paddingLeft: `${28 + depth * 16}px` }}>
             <Input
-              autoFocus
-              value={newFolderName}
+              autoFocus value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleCreateFolder();
-                if (e.key === "Escape") {
-                  setAddingFolder(false);
-                  setAddingParentId(null);
-                }
+                if (e.key === "Escape") { setAddingFolder(false); setAddingParentId(null); }
               }}
-              placeholder="Folder name"
-              className="h-7 text-xs"
+              placeholder="Folder name" className="h-7 text-xs"
             />
             <button onClick={() => { setAddingFolder(false); setAddingParentId(null); }} className="p-1 hover:bg-accent rounded">
               <X className="h-3 w-3" />
@@ -256,7 +234,7 @@ export function Sidebar({
 
   if (!open) {
     return (
-      <div className="w-14 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-5 gap-3 shrink-0">
+      <div className="w-14 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-5 gap-3 shrink-0 h-screen sticky top-0">
         <button onClick={onToggle} className="p-2.5 hover:bg-secondary rounded-lg transition-colors" aria-label="Open sidebar">
           <PanelLeft className="h-4 w-4 text-muted-foreground" />
         </button>
@@ -274,9 +252,9 @@ export function Sidebar({
   }
 
   return (
-    <div className="w-[260px] bg-sidebar border-r border-sidebar-border flex flex-col h-screen sticky top-0 shrink-0 animate-slideIn overflow-hidden shadow-sm">
+    <div className="w-[300px] bg-sidebar border-r border-sidebar-border flex flex-col h-screen sticky top-0 shrink-0 animate-slideIn overflow-hidden shadow-sm">
       {/* Logo */}
-      <div className="px-4 pt-5 pb-3 flex items-center justify-between shrink-0">
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg flex items-center justify-center text-lg shadow-sm" style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}>
             🔖
@@ -288,10 +266,11 @@ export function Sidebar({
         </button>
       </div>
 
+      {/* Scrollable content */}
       <ScrollArea className="flex-1">
-        <div className="px-3 py-1">
+        <div className="px-3 pb-4">
           {/* Main Navigation */}
-          <div className="space-y-0.5 mb-1">
+          <div className="space-y-0.5 mb-2">
             <NavButton
               emoji="📚" label="All Bookmarks" count={totalCount}
               onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
@@ -319,45 +298,36 @@ export function Sidebar({
             />
           </div>
 
-          <Separator className="my-4 opacity-50" />
+          <Separator className="my-3 opacity-40" />
 
           {/* Collections */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between px-3 mb-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
-                My Lists
-              </p>
-              <div className="flex gap-0.5">
-                <button
-                  onClick={onNavigateCollections}
-                  className="p-1 hover:bg-secondary rounded-md transition-colors"
-                  title="View all collections"
-                >
-                  <LayoutGrid className="h-3 w-3 text-muted-foreground" />
-                </button>
-                <button
-                  onClick={() => { setAddingFolder(true); setAddingParentId(null); }}
-                  className="p-1 hover:bg-secondary rounded-md transition-colors"
-                >
-                  <Plus className="h-3 w-3 text-muted-foreground" />
-                </button>
-              </div>
+          <div className="mb-2">
+            <div className="flex items-center justify-between px-1 mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60">My Collections</p>
+              <button
+                onClick={() => { setAddingFolder(true); setAddingParentId(null); }}
+                className="p-1 hover:bg-secondary rounded-md transition-colors"
+                title="New collection"
+              >
+                <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
             </div>
             <div className="space-y-0.5">
               {rootFolders.map((f) => renderFolder(f))}
             </div>
+            {rootFolders.length === 0 && !addingFolder && (
+              <p className="text-[11px] text-muted-foreground/40 italic px-3 py-1">No collections yet</p>
+            )}
             {addingFolder && addingParentId === null && (
-              <div className="flex items-center gap-1.5 px-3 py-1">
+              <div className="flex items-center gap-1.5 px-1 py-1">
                 <Input
-                  autoFocus
-                  value={newFolderName}
+                  autoFocus value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleCreateFolder();
                     if (e.key === "Escape") setAddingFolder(false);
                   }}
-                  placeholder="Collection name"
-                  className="h-7 text-xs"
+                  placeholder="Collection name" className="h-7 text-xs"
                 />
                 <button onClick={() => setAddingFolder(false)} className="p-1 hover:bg-accent rounded">
                   <X className="h-3 w-3" />
@@ -366,85 +336,78 @@ export function Sidebar({
             )}
           </div>
 
-          <Separator className="my-4 opacity-50" />
+          <Separator className="my-3 opacity-40" />
 
-          {/* Tags - News Section Style */}
-          <div className="mb-6">
-            <div className="px-3 mb-3 flex items-center justify-between">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 flex items-center gap-2">
+          {/* Tags — horizontal badges, frequency sorted, real-time */}
+          <div className="mb-2">
+            <div className="px-1 mb-2.5 flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60 flex items-center gap-1.5">
                 🏷️ Top Tags
               </p>
-              {allTags.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
-            </div>
-            <div className="flex flex-col gap-1 px-1">
-              {allTags.slice(0, 5).map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => {
-                    const newTags = filters.tags.includes(tag) ? [] : [tag];
-                    onFilterChange({ ...filters, tags: newTags });
-                  }}
-                  className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-[12px] transition-all group ${
-                    filters.tags.includes(tag)
-                      ? "bg-primary/10 text-primary font-bold shadow-xs"
-                      : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="opacity-40 text-[10px]">#</span>
-                    <span className="truncate max-w-[140px]">{tag}</span>
-                  </div>
-                  <div className="h-1 w-1 rounded-full bg-border group-hover:bg-primary/40 transition-colors" />
-                </button>
-              ))}
-              {allTags.length === 0 && (
-                <p className="px-3 text-[10px] text-muted-foreground/50 italic py-1">No tags yet</p>
+              {allTags.length > 0 && (
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               )}
             </div>
+            {allTags.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground/40 italic px-1 py-1">Add tags to bookmarks to see them here</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5 px-1">
+                {allTags.slice(0, 15).map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => {
+                      const newTags = filters.tags.includes(tag)
+                        ? filters.tags.filter((t) => t !== tag)
+                        : [...filters.tags, tag];
+                      onFilterChange({ ...filters, tags: newTags, folderId: null, favoritesOnly: false });
+                    }}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-150 border ${
+                      filters.tags.includes(tag)
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-secondary/60 text-muted-foreground border-border/30 hover:bg-accent hover:text-foreground hover:border-primary/30"
+                    }`}
+                  >
+                    <span className="opacity-50 text-[9px]">#</span>
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </ScrollArea>
 
-      {/* Theme Picker - Personalized Bottom Left */}
-      <div className="p-4 border-t border-sidebar-border bg-sidebar shrink-0">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 mb-3 px-1 flex items-center gap-2">
-            🎨 Theme
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger className="col-span-2 flex items-center justify-between px-3 py-2.5 bg-secondary/40 hover:bg-secondary/70 rounded-xl text-[12px] font-bold text-foreground transition-all cursor-pointer border border-border/20 shadow-xs group">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-5 w-5 rounded-full border-2 border-primary/20 flex items-center justify-center bg-card shadow-xs group-hover:scale-110 transition-transform">
-                    <span className="text-xs">
-                      {THEMES.find(t => t.name === currentTheme)?.emoji}
-                    </span>
-                  </div>
-                  <span>{THEMES.find(t => t.name === currentTheme)?.label}</span>
-                </div>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-data-[state=open]:rotate-180" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[228px] p-2 rounded-2xl shadow-xl border-border/40 backdrop-blur-xl bg-card/95" align="start" side="top" sideOffset={12}>
-                <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-1">Select Appearance</p>
-                {THEMES.map((theme) => (
-                  <DropdownMenuItem 
-                    key={theme.name}
-                    onClick={() => onThemeChange(theme.name)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5 last:mb-0 ${
-                      currentTheme === theme.name ? "bg-primary/10 text-primary font-bold" : "hover:bg-secondary"
-                    }`}
-                  >
-                    <div className="h-6 w-6 rounded-full border-2 border-border/40 flex items-center justify-center shadow-xs" style={{ backgroundColor: theme.preview }}>
-                       <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">✨</span>
-                    </div>
-                    <div className="flex-1 text-[13px]">{theme.label}</div>
-                    <span className="text-[9px] opacity-40 font-bold uppercase tracking-tighter bg-secondary/80 px-1.5 py-0.5 rounded-md">{theme.isDark ? 'Dark' : 'Light'}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+      {/* Theme Picker — pinned to bottom */}
+      <div className="px-4 py-3 border-t border-sidebar-border bg-sidebar shrink-0">
+        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground/50 mb-2">🎨 Theme</p>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-full flex items-center justify-between px-3 py-2 bg-secondary/40 hover:bg-secondary/70 rounded-xl text-[12px] font-semibold text-foreground transition-all cursor-pointer border border-border/20 group">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 rounded-full border border-border/50" style={{ backgroundColor: THEMES.find(t => t.name === currentTheme)?.preview }} />
+              <span>{THEMES.find(t => t.name === currentTheme)?.label}</span>
+              <span className="text-[9px] opacity-40 font-bold uppercase bg-secondary px-1 py-0.5 rounded">
+                {THEMES.find(t => t.name === currentTheme)?.isDark ? 'Dark' : 'Light'}
+              </span>
+            </div>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/60" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-[268px] p-2 rounded-2xl shadow-xl border-border/40 bg-card/95" align="start" side="top" sideOffset={8}>
+            <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">Select Appearance</p>
+            {THEMES.map((theme) => (
+              <DropdownMenuItem
+                key={theme.name}
+                onClick={() => onThemeChange(theme.name)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${
+                  currentTheme === theme.name ? "bg-primary/10 text-primary font-bold" : "hover:bg-secondary"
+                }`}
+              >
+                <div className="h-5 w-5 rounded-full border-2 border-border/30 shrink-0" style={{ backgroundColor: theme.preview }} />
+                <span className="flex-1 text-[13px]">{theme.label}</span>
+                <span className="text-[9px] opacity-40 font-bold uppercase bg-secondary/80 px-1.5 py-0.5 rounded-md">{theme.isDark ? 'Dark' : 'Light'}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
