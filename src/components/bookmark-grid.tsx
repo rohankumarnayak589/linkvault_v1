@@ -75,7 +75,10 @@ export function BookmarkGrid({
                   src={bookmark.previewImage} 
                   alt="" 
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} 
+                  onError={(e) => { 
+                    (e.target as HTMLImageElement).style.display = "none";
+                    (e.target as HTMLImageElement).parentElement!.classList.add("bg-gradient-to-br", domain.gradient);
+                  }} 
                 />
               ) : (
                 <div className={`absolute inset-0 bg-gradient-to-br ${domain.gradient} opacity-80 flex items-center justify-center`}>
