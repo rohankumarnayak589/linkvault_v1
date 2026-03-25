@@ -58,30 +58,31 @@ export function AddBookmarkDialog({
   }, [open, editingBookmark]);
 
   const fetchMetadata = useCallback(async (inputUrl: string) => {
-    if (!inputUrl.startsWith("http")) return;
+    if (!inputUrl || !inputUrl.startsWith("http") || fetching) return;
     setFetching(true);
     try {
       const response = await fetch(`/api/metadata?url=${encodeURIComponent(inputUrl)}`);
       if (response.ok) {
         const data = await response.json();
-        if (data.title && !title) setTitle(data.title);
+        // Only set values if they are currently empty or equal to the URL
+        if (data.title && (!title || title === url)) setTitle(data.title);
         if (data.description && !description) setDescription(data.description);
         if (data.favicon) setFavicon(data.favicon);
         if (data.tags && data.tags.length > 0 && tags.length === 0) {
           setTags(data.tags);
         }
       } else {
-        // Fallback to basic domain icon if API fails
         const hostname = new URL(inputUrl).hostname;
         setFavicon(`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`);
       }
-    } catch { 
+    } catch (err) {
+      console.error("Fetch error:", err);
       try {
         const hostname = new URL(inputUrl).hostname;
         setFavicon(`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`);
       } catch { /* ignore */ }
     } finally { setFetching(false); }
-  }, [title, description, tags.length]);
+  }, [url, title, description, tags.length, fetching]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

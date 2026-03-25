@@ -129,7 +129,7 @@ function DashboardContent() {
 
   const handleAddBookmark = async (data: Omit<Bookmark, "id" | "createdAt" | "updatedAt" | "visitCount" | "lastVisitedAt">) => {
     // Duplicate detection
-    const duplicate = bookmarks.find(b => b.url.toLowerCase() === data.url.toLowerCase());
+    const duplicate = bookmarks.find(b => b.url.toLowerCase() === data.url.toLowerCase() && !b.isDeleted);
     if (duplicate) {
       toast.error("Duplicate Bookmark", { 
         description: `"${duplicate.title}" is already in your vault.`,
@@ -137,9 +137,14 @@ function DashboardContent() {
       return;
     }
 
+    // Use the folderId from the dialog data rather than the active filter
     const newBk = await addBookmark(data);
     setBookmarks((prev) => [...prev, newBk]);
-    toast.success("Bookmark saved! 🎉", { description: data.title });
+    
+    const folder = folders.find(f => f.id === data.folderId);
+    toast.success("Bookmark saved! 🎉", { 
+      description: folder ? `Added to "${folder.name}"` : `Added to "${data.title}"` 
+    });
     setShowAddDialog(false);
   };
 

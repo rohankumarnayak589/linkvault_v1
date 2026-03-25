@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { applyTheme, getSavedTheme } from "@/lib/icon-mapper";
 
 const fadeInUp = {
@@ -30,6 +32,15 @@ const staggerContainer = {
 };
 
 export default function LandingPage() {
+  const { isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace("/dashboard");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
   useEffect(() => {
     const saved = getSavedTheme("linkvault-landing-theme");
     applyTheme(saved, "linkvault-landing-theme");

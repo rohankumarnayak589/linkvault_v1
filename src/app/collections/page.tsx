@@ -104,7 +104,7 @@ export default function CollectionsPage() {
         folders={folders} allTags={allTags} bookmarkCounts={bookmarkCounts}
         totalCount={totalBookmarks} favoritesCount={favoritesCount} recentCount={recentCount}
         filters={{ query: "", folderId: null, tags: [], favoritesOnly: false, dateFrom: null, dateTo: null }}
-        onFilterChange={() => router.push("/")} onAddFolder={handleAddFolder}
+        onFilterChange={() => router.push("/dashboard")} onAddFolder={handleAddFolder}
         onDeleteFolder={handleDeleteFolder} onRenameFolder={handleRenameFolder}
         open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)}
         currentTheme={currentTheme} onThemeChange={handleThemeChange}
@@ -115,7 +115,7 @@ export default function CollectionsPage() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <div className="bg-card/80 backdrop-blur-sm border-b border-border px-6 py-4 flex items-center gap-4">
-          <button onClick={() => router.push("/")} className="p-2 hover:bg-secondary rounded-lg transition-colors">
+          <button onClick={() => router.push("/dashboard")} className="p-2 hover:bg-secondary rounded-lg transition-colors">
             <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </button>
           <div>
@@ -136,7 +136,7 @@ export default function CollectionsPage() {
                   key={folder.id}
                   className="group collection-card bg-card rounded-xl border border-border/50 overflow-hidden cursor-pointer animate-fadeInUp"
                   style={{ animationDelay: `${i * 40}ms` }}
-                  onClick={() => router.push(`/?collection=${folder.id}`)}
+                  onClick={() => router.push(`/dashboard?collection=${folder.id}`)}
                 >
                   {/* Color header */}
                   <div className="h-24 flex items-center justify-center relative" style={{ backgroundColor: folder.color || "#F5F0EB" }}>
