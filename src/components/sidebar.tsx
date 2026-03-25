@@ -290,120 +290,117 @@ export function Sidebar({
 
       <ScrollArea className="flex-1">
         <div className="px-3 py-1">
-        {/* Main Navigation */}
-        <div className="space-y-0.5 mb-1 px-3">
-          <NavButton
-            emoji="📚" label="All Bookmarks" count={totalCount}
-            onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
-            isActive={!filters.folderId && !filters.favoritesOnly && filters.tags.length === 0}
-          />
-          <NavButton
-            emoji="📂" label="Collections"
-            onClick={onNavigateCollections}
-            isActive={false}
-          />
-          <NavButton
-            emoji="⭐" label="Favorites" count={favoritesCount}
-            onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: true, tags: [] })}
-            isActive={filters.favoritesOnly}
-          />
-          <NavButton
-            emoji="🕐" label="Recent" count={recentCount}
-            onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
-            isActive={false}
-          />
-          <NavButton
-            emoji="🗑️" label="Trash"
-            onClick={() => onFilterChange({ ...filters, folderId: "__trash__", favoritesOnly: false, tags: [] })}
-            isActive={filters.folderId === "__trash__"}
-          />
-        </div>
+          {/* Main Navigation */}
+          <div className="space-y-0.5 mb-1">
+            <NavButton
+              emoji="📚" label="All Bookmarks" count={totalCount}
+              onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
+              isActive={!filters.folderId && !filters.favoritesOnly && filters.tags.length === 0}
+            />
+            <NavButton
+              emoji="📂" label="Collections"
+              onClick={onNavigateCollections}
+              isActive={false}
+            />
+            <NavButton
+              emoji="⭐" label="Favorites" count={favoritesCount}
+              onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: true, tags: [] })}
+              isActive={filters.favoritesOnly}
+            />
+            <NavButton
+              emoji="🕐" label="Recent" count={recentCount}
+              onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
+              isActive={false}
+            />
+            <NavButton
+              emoji="🗑️" label="Trash"
+              onClick={() => onFilterChange({ ...filters, folderId: "__trash__", favoritesOnly: false, tags: [] })}
+              isActive={filters.folderId === "__trash__"}
+            />
+          </div>
 
-        <div className="px-3">
           <Separator className="my-4 opacity-50" />
-        </div>
 
-        {/* Collections */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between px-3 mb-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
-              My Lists
-            </p>
-            <div className="flex gap-0.5">
-              <button
-                onClick={onNavigateCollections}
-                className="p-1 hover:bg-secondary rounded-md transition-colors"
-                title="View all collections"
-              >
-                <LayoutGrid className="h-3 w-3 text-muted-foreground" />
-              </button>
-              <button
-                onClick={() => { setAddingFolder(true); setAddingParentId(null); }}
-                className="p-1 hover:bg-secondary rounded-md transition-colors"
-              >
-                <Plus className="h-3 w-3 text-muted-foreground" />
-              </button>
+          {/* Collections */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between px-3 mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
+                My Lists
+              </p>
+              <div className="flex gap-0.5">
+                <button
+                  onClick={onNavigateCollections}
+                  className="p-1 hover:bg-secondary rounded-md transition-colors"
+                  title="View all collections"
+                >
+                  <LayoutGrid className="h-3 w-3 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => { setAddingFolder(true); setAddingParentId(null); }}
+                  className="p-1 hover:bg-secondary rounded-md transition-colors"
+                >
+                  <Plus className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="space-y-0.5">
-            {rootFolders.map((f) => renderFolder(f))}
-          </div>
-          {addingFolder && addingParentId === null && (
-            <div className="flex items-center gap-1.5 px-3 py-1">
-              <Input
-                autoFocus
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleCreateFolder();
-                  if (e.key === "Escape") setAddingFolder(false);
-                }}
-                placeholder="Collection name"
-                className="h-7 text-xs"
-              />
-              <button onClick={() => setAddingFolder(false)} className="p-1 hover:bg-accent rounded">
-                <X className="h-3 w-3" />
-              </button>
+            <div className="space-y-0.5">
+              {rootFolders.map((f) => renderFolder(f))}
             </div>
-          )}
-        </div>
-
-        <div className="px-3">
-          <Separator className="my-4 opacity-50" />
-        </div>
-
-        {/* Tags - News Section Style */}
-        <div className="mb-6">
-          <div className="px-3 mb-3 flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 flex items-center gap-2">
-              🏷️ Top Tags
-            </p>
-            {allTags.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
-          </div>
-          <div className="flex flex-col gap-1 px-1">
-            {allTags.slice(0, 5).map((tag) => (
-              <button
-                key={tag}
-                onClick={() => {
-                  const newTags = filters.tags.includes(tag) ? [] : [tag];
-                  onFilterChange({ ...filters, tags: newTags });
-                }}
-                className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-[12px] transition-all group ${
-                  filters.tags.includes(tag)
-                    ? "bg-primary/10 text-primary font-bold shadow-xs"
-                    : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="opacity-40 text-[10px]">#</span>
-                  <span className="truncate max-w-[140px]">{tag}</span>
-                </div>
-                <div className="h-1 w-1 rounded-full bg-border group-hover:bg-primary/40 transition-colors" />
-              </button>
-            ))}
-            {allTags.length === 0 && (
-              <p className="px-3 text-[10px] text-muted-foreground/50 italic py-1">No tags yet</p>
+            {addingFolder && addingParentId === null && (
+              <div className="flex items-center gap-1.5 px-3 py-1">
+                <Input
+                  autoFocus
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleCreateFolder();
+                    if (e.key === "Escape") setAddingFolder(false);
+                  }}
+                  placeholder="Collection name"
+                  className="h-7 text-xs"
+                />
+                <button onClick={() => setAddingFolder(false)} className="p-1 hover:bg-accent rounded">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
             )}
+          </div>
+
+          <Separator className="my-4 opacity-50" />
+
+          {/* Tags - News Section Style */}
+          <div className="mb-6">
+            <div className="px-3 mb-3 flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 flex items-center gap-2">
+                🏷️ Top Tags
+              </p>
+              {allTags.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
+            </div>
+            <div className="flex flex-col gap-1 px-1">
+              {allTags.slice(0, 5).map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => {
+                    const newTags = filters.tags.includes(tag) ? [] : [tag];
+                    onFilterChange({ ...filters, tags: newTags });
+                  }}
+                  className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-[12px] transition-all group ${
+                    filters.tags.includes(tag)
+                      ? "bg-primary/10 text-primary font-bold shadow-xs"
+                      : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="opacity-40 text-[10px]">#</span>
+                    <span className="truncate max-w-[140px]">{tag}</span>
+                  </div>
+                  <div className="h-1 w-1 rounded-full bg-border group-hover:bg-primary/40 transition-colors" />
+                </button>
+              ))}
+              {allTags.length === 0 && (
+                <p className="px-3 text-[10px] text-muted-foreground/50 italic py-1">No tags yet</p>
+              )}
+            </div>
           </div>
         </div>
       </ScrollArea>
