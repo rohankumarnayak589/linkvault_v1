@@ -83,7 +83,7 @@ export function LandingNav() {
               <Link href="/sign-in">
                 <Button variant="ghost" size="sm" className="font-semibold">Log In</Button>
               </Link>
-              <Link href="/sign-up">
+              <Link href="/sign-in">
                 <Button size="sm" className="font-bold rounded-xl px-6 bg-primary shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">Get Started</Button>
               </Link>
             </>
