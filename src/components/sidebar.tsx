@@ -274,7 +274,7 @@ export function Sidebar({
   }
 
   return (
-    <div className="w-[260px] bg-sidebar border-r border-sidebar-border flex flex-col h-full shrink-0 animate-slideIn overflow-hidden">
+    <div className="w-[260px] bg-sidebar border-r border-sidebar-border flex flex-col h-screen sticky top-0 shrink-0 animate-slideIn overflow-hidden shadow-sm">
       {/* Logo */}
       <div className="px-4 pt-5 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -404,8 +404,8 @@ export function Sidebar({
       </ScrollArea>
 
       {/* Theme + Meta */}
-      <div className="p-4 border-t border-sidebar-border space-y-3">
-        <div>
+      <div className="p-4 border-t border-sidebar-border bg-sidebar mt-auto">
+        <div className="mb-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 mb-2 px-1">
             🎨 Personalize
           </p>
