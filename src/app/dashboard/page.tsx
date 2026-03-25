@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { Bookmark, Folder, ViewMode, SortOption, SearchFilters, ThemeName } from "@/lib/types";
 import {
   getAllBookmarks, getAllFolders, addBookmark, updateBookmark,
-  deleteBookmark, addFolder, deleteFolder, updateFolder, seedSampleData, importBookmarks,
+  deleteBookmark, restoreBookmark, permanentlyDeleteBookmark,
+  addFolder, deleteFolder, updateFolder, seedSampleData, importBookmarks,
 } from "@/lib/db";
 import { searchBookmarks, getAllTags } from "@/lib/search";
 import {
@@ -87,10 +88,21 @@ function DashboardContent() {
 
   const filteredBookmarks = useMemo(() => {
     let effectiveFilters = { ...filters };
+    
+    // Trash view logic
+    if (filters.folderId === "__trash__") {
+      effectiveFilters = { ...filters, folderId: null };
+      const results = searchBookmarks(bookmarks, effectiveFilters).filter((b) => b.isDeleted);
+      return results.sort((a, b) => new Date(b.deletedAt || b.updatedAt).getTime() - new Date(a.deletedAt || a.updatedAt).getTime());
+    }
+
+    // Standard view logic (folders, unsorted, favorites, search)
     if (filters.folderId === "__unsorted__") {
       effectiveFilters = { ...filters, folderId: null };
-      const results = searchBookmarks(bookmarks, effectiveFilters).filter((b) => !b.folderId);
+      const results = searchBookmarks(bookmarks, effectiveFilters).filter((b) => !b.folderId && !b.isDeleted);
       return results.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
         switch (sortBy) {
           case "title": return a.title.localeCompare(b.title);
           case "mostVisited": return b.visitCount - a.visitCount;
@@ -99,7 +111,8 @@ function DashboardContent() {
         }
       });
     }
-    const results = searchBookmarks(bookmarks, effectiveFilters);
+
+    const results = searchBookmarks(bookmarks, effectiveFilters).filter((b) => !b.isDeleted);
     return results.sort((a, b) => {
       // Pinned bookmarks always come first
       if (a.isPinned && !b.isPinned) return -1;
@@ -146,8 +159,22 @@ function DashboardContent() {
 
   const handleDeleteBookmark = async (id: string) => {
     await deleteBookmark(id);
-    setBookmarks((prev) => prev.filter((b) => b.id !== id));
-    toast.success("Bookmark deleted 🗑️");
+    await loadData(); // Reload to reflect status
+    toast.success("Moved to Trash 🗑️");
+  };
+
+  const handleRestoreBookmark = async (id: string) => {
+    await restoreBookmark(id);
+    await loadData();
+    toast.success("Bookmark restored! ✨");
+  };
+
+  const handlePermanentDelete = async (id: string) => {
+    if (confirm("Permanently delete this bookmark? This cannot be undone.")) {
+      await permanentlyDeleteBookmark(id);
+      await loadData();
+      toast.success("Bookmark permanently deleted");
+    }
   };
 
   const handleToggleFavorite = async (id: string) => {
@@ -165,6 +192,17 @@ function DashboardContent() {
       toast(b.isPinned ? "Unpinned from top" : "Pinned to top 📌");
     }
   };
+
+  const handleEmptyTrash = async () => {
+    if (confirm("Permanently delete all items in Trash? This cannot be undone.")) {
+      const trashItems = bookmarks.filter(b => b.isDeleted);
+      await Promise.all(trashItems.map(b => permanentlyDeleteBookmark(b.id)));
+      await loadData();
+      toast.success("Trash emptied");
+    }
+  };
+
+  const isTrashView = filters.folderId === "__trash__";
 
   const handleAddFolder = async (name: string, parentId: string | null) => {
     const folder = await addFolder(name, parentId);
@@ -219,20 +257,24 @@ function DashboardContent() {
     ? activeFolder.name
     : filters.folderId === "__unsorted__"
       ? "Inbox"
-      : filters.favoritesOnly
-        ? "Favorites"
-        : "All Bookmarks";
+      : filters.folderId === "__trash__"
+        ? "Trash"
+        : filters.favoritesOnly
+          ? "Favorites"
+          : "All Bookmarks";
 
   const activeEmoji = activeFolder
     ? activeFolder.icon
     : filters.folderId === "__unsorted__"
       ? "📥"
-      : filters.favoritesOnly
-        ? "⭐"
-        : "📚";
+      : filters.folderId === "__trash__"
+        ? "🗑️"
+        : filters.favoritesOnly
+          ? "⭐"
+          : "📚";
 
-  const favoritesCount = bookmarks.filter((b) => b.isFavorite).length;
-  const recentCount = bookmarks.filter((b) => new Date().getTime() - new Date(b.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000).length;
+  const favoritesCount = bookmarks.filter((b) => b.isFavorite && !b.isDeleted).length;
+  const recentCount = bookmarks.filter((b) => !b.isDeleted && new Date().getTime() - new Date(b.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000).length;
 
   if (loading) {
     return (
@@ -249,10 +291,15 @@ function DashboardContent() {
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar
         folders={folders} allTags={allTags}
-        bookmarkCounts={bookmarks.reduce((acc, b) => { const k = b.folderId || "__root__"; acc[k] = (acc[k] || 0) + 1; return acc; }, {} as Record<string, number>)}
-        totalCount={bookmarks.filter((b) => !b.isArchived).length}
-        favoritesCount={bookmarks.filter((b) => b.isFavorite).length}
-        recentCount={bookmarks.filter((b) => new Date().getTime() - new Date(b.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000).length}
+        bookmarkCounts={bookmarks.reduce((acc, b) => { 
+          if (b.isDeleted) return acc;
+          const k = b.folderId || "__root__"; 
+          acc[k] = (acc[k] || 0) + 1; 
+          return acc; 
+        }, {} as Record<string, number>)}
+        totalCount={bookmarks.filter((b) => !b.isDeleted).length}
+        favoritesCount={favoritesCount}
+        recentCount={recentCount}
         filters={filters} onFilterChange={setFilters}
         onAddFolder={handleAddFolder} onDeleteFolder={handleDeleteFolder} onRenameFolder={handleRenameFolder}
         open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)}
@@ -269,57 +316,58 @@ function DashboardContent() {
           onAddBookmark={() => setShowAddDialog(true)}
           onExport={handleExport} onImport={handleImport}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          currentTheme={currentTheme} onThemeChange={handleThemeChange}
         />
 
         <main className="flex-1 overflow-auto p-6">
           {/* Stats Bar */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-card border border-border/50 p-4 rounded-2xl card-notion shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <span className="text-xl">📚</span>
+          {!isTrashView && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="bg-card border border-border/50 p-4 rounded-2xl card-notion shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <span className="text-xl">📚</span>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Total</p>
+                    <p className="text-xl font-bold text-foreground">{bookmarks.filter(b => !b.isDeleted).length}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Total</p>
-                  <p className="text-xl font-bold text-foreground">{bookmarks.length}</p>
+              </div>
+              <div className="bg-card border border-border/50 p-4 rounded-2xl card-notion shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-amber-400/10 flex items-center justify-center text-amber-500">
+                    <span className="text-xl">⭐</span>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Favorites</p>
+                    <p className="text-xl font-bold text-foreground">{favoritesCount}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card border border-border/50 p-4 rounded-2xl card-notion shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-blue-400/10 flex items-center justify-center text-blue-500">
+                    <span className="text-xl">📂</span>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Collections</p>
+                    <p className="text-xl font-bold text-foreground">{folders.length}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card border border-border/50 p-4 rounded-2xl card-notion shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-green-400/10 flex items-center justify-center text-green-500">
+                    <span className="text-xl">☀️</span>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">New This Week</p>
+                    <p className="text-xl font-bold text-foreground">{recentCount}</p>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="bg-card border border-border/50 p-4 rounded-2xl card-notion shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-amber-400/10 flex items-center justify-center text-amber-500">
-                  <span className="text-xl">⭐</span>
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Favorites</p>
-                  <p className="text-xl font-bold text-foreground">{favoritesCount}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-card border border-border/50 p-4 rounded-2xl card-notion shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-blue-400/10 flex items-center justify-center text-blue-500">
-                  <span className="text-xl">📂</span>
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Collections</p>
-                  <p className="text-xl font-bold text-foreground">{folders.length}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-card border border-border/50 p-4 rounded-2xl card-notion shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-green-400/10 flex items-center justify-center text-green-500">
-                  <span className="text-xl">☀️</span>
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">New This Week</p>
-                  <p className="text-xl font-bold text-foreground">{recentCount}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Page header */}
           <div className="mb-6 flex items-end justify-between">
@@ -329,34 +377,64 @@ function DashboardContent() {
                 <span>{activeLabel}</span>
               </h1>
               <p className="text-[13px] text-muted-foreground mt-0.5 font-medium">
-                Showing {filteredBookmarks.length} saved link{filteredBookmarks.length !== 1 ? "s" : ""}
+                {isTrashView ? "Deleted items remain here until purged" : `Showing ${filteredBookmarks.length} saved link${filteredBookmarks.length !== 1 ? "s" : ""}`}
               </p>
             </div>
-            <button
-              onClick={() => setShowAddDialog(true)}
-              className="flex items-center gap-2.5 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-150 font-bold text-[13px] cursor-pointer"
-            >
-              <Plus className="h-4 w-4" />
-              Quick Add
-            </button>
+            <div className="flex gap-3">
+              {isTrashView ? (
+                <button
+                  onClick={handleEmptyTrash}
+                  className="px-6 py-3 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl shadow-sm hover:shadow-md transition-all font-bold text-[13px] cursor-pointer disabled:opacity-50"
+                  disabled={filteredBookmarks.length === 0}
+                >
+                  Empty Trash
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowAddDialog(true)}
+                  className="flex items-center gap-2.5 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-150 font-bold text-[13px] cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" />
+                  Quick Add
+                </button>
+              )}
+            </div>
           </div>
 
           {filteredBookmarks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center animate-fadeInUp">
-              <div className="text-6xl mb-5">🔖</div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">No bookmarks found</h3>
+              <div className="text-6xl mb-5">{isTrashView ? "🗑️" : "🔖"}</div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {isTrashView ? "Trash is empty" : "No bookmarks found"}
+              </h3>
               <p className="text-[13px] text-muted-foreground mb-6 max-w-sm leading-relaxed">
-                {filters.query ? `No results for "${filters.query}". Try adjusting your search.` : "Start saving your favorite links! Click + or press Ctrl+K."}
+                {isTrashView 
+                  ? "Deleted bookmarks will appear here for recovery." 
+                  : filters.query ? `No results for "${filters.query}". Try adjusting your search.` : "Start saving your favorite links! Click + or press Ctrl+K."}
               </p>
-              <button onClick={() => setShowAddDialog(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm hover:shadow-md transition-all font-semibold text-[13px] cursor-pointer">
-                <Plus className="h-4 w-4" /> Add your first bookmark
-              </button>
+              {!isTrashView && (
+                <button onClick={() => setShowAddDialog(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm hover:shadow-md transition-all font-semibold text-[13px] cursor-pointer">
+                  <Plus className="h-4 w-4" /> Add your first bookmark
+                </button>
+              )}
             </div>
           ) : viewMode === "grid" ? (
-            <BookmarkGrid bookmarks={filteredBookmarks} onToggleFavorite={handleToggleFavorite} onTogglePinned={handleTogglePinned} onDelete={handleDeleteBookmark} onEdit={handleEditBookmark} onOpen={handleOpenBookmark} />
+            <BookmarkGrid 
+              bookmarks={filteredBookmarks} onToggleFavorite={handleToggleFavorite} 
+              onTogglePinned={handleTogglePinned} onDelete={handleDeleteBookmark} 
+              onEdit={handleEditBookmark} onOpen={handleOpenBookmark} 
+              isTrashView={isTrashView} onRestore={handleRestoreBookmark}
+              onPermanentDelete={handlePermanentDelete}
+            />
           ) : (
-            <BookmarkList bookmarks={filteredBookmarks} onToggleFavorite={handleToggleFavorite} onTogglePinned={handleTogglePinned} onDelete={handleDeleteBookmark} onEdit={handleEditBookmark} onOpen={handleOpenBookmark} />
+            <BookmarkList 
+              bookmarks={filteredBookmarks} onToggleFavorite={handleToggleFavorite} 
+              onTogglePinned={handleTogglePinned} onDelete={handleDeleteBookmark} 
+              onEdit={handleEditBookmark} onOpen={handleOpenBookmark} 
+              isTrashView={isTrashView} onRestore={handleRestoreBookmark}
+              onPermanentDelete={handlePermanentDelete}
+            />
           )}
         </main>
       </div>

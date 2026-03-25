@@ -61,14 +61,27 @@ export function AddBookmarkDialog({
     if (!inputUrl.startsWith("http")) return;
     setFetching(true);
     try {
-      const hostname = new URL(inputUrl).hostname;
-      setFavicon(`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`);
-      if (!title) {
-        const domain = hostname.replace("www.", "").split(".")[0];
-        setTitle(domain.charAt(0).toUpperCase() + domain.slice(1));
+      const response = await fetch(`/api/metadata?url=${encodeURIComponent(inputUrl)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.title && !title) setTitle(data.title);
+        if (data.description && !description) setDescription(data.description);
+        if (data.favicon) setFavicon(data.favicon);
+        if (data.tags && data.tags.length > 0 && tags.length === 0) {
+          setTags(data.tags);
+        }
+      } else {
+        // Fallback to basic domain icon if API fails
+        const hostname = new URL(inputUrl).hostname;
+        setFavicon(`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`);
       }
-    } catch { /* ignore */ } finally { setFetching(false); }
-  }, [title]);
+    } catch { 
+      try {
+        const hostname = new URL(inputUrl).hostname;
+        setFavicon(`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`);
+      } catch { /* ignore */ }
+    } finally { setFetching(false); }
+  }, [title, description, tags.length]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -87,10 +100,10 @@ export function AddBookmarkDialog({
 
   const handleSubmit = () => {
     if (!url.trim()) return;
-    const data = {
+    const data: Omit<Bookmark, "id" | "createdAt" | "updatedAt" | "visitCount" | "lastVisitedAt"> = {
       url: url.trim(), title: title.trim() || url.trim(), description: description.trim(),
       favicon, previewImage: "", tags, folderId, notes: notes.trim(),
-      isFavorite, isPinned, isArchived: false,
+      isFavorite, isPinned, isArchived: false, isDeleted: false, deletedAt: null,
     };
     if (isEditing && editingBookmark) {
       onUpdate(editingBookmark.id, data);

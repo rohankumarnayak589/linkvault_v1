@@ -13,6 +13,8 @@ export interface Bookmark {
   isFavorite: boolean;
   isPinned: boolean;
   isArchived: boolean;
+  isDeleted: boolean;
+  deletedAt: string | null;
   visitCount: number;
   createdAt: string;
   updatedAt: string;

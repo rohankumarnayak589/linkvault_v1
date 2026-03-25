@@ -29,14 +29,11 @@ interface TopNavProps {
   onExport: (format: "json" | "csv" | "html") => void;
   onImport: (file: File) => void;
   onToggleSidebar: () => void;
-  currentTheme: ThemeName;
-  onThemeChange: (theme: ThemeName) => void;
 }
 
 export function TopNav({
   filters, onFilterChange, viewMode, onViewModeChange,
   sortBy, onSortChange, onAddBookmark, onExport, onImport, onToggleSidebar,
-  currentTheme, onThemeChange,
 }: TopNavProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isSignedIn } = useUser();
@@ -101,27 +98,6 @@ export function TopNav({
           <DropdownMenuItem onClick={() => onSortChange("dateUpdated")}>
             <FileEdit className="h-4 w-4 mr-2" /> Last Updated
           </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Theme Picker */}
-      <DropdownMenu>
-        <DropdownMenuTrigger className="hidden md:flex p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">
-          <Palette className="h-4 w-4" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[180px] p-1.5 rounded-xl">
-          {THEMES.map((theme) => (
-            <DropdownMenuItem 
-              key={theme.name}
-              onClick={() => onThemeChange(theme.name)}
-              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg cursor-pointer transition-colors mb-0.5 last:mb-0 ${
-                currentTheme === theme.name ? "bg-primary/10 text-primary font-bold" : ""
-              }`}
-            >
-              <div className="h-3 w-3 rounded-full border border-border/40" style={{ backgroundColor: theme.preview }} />
-              <span className="flex-1 text-[13px]">{theme.label}</span>
-            </DropdownMenuItem>
-          ))}
         </DropdownMenuContent>
       </DropdownMenu>
 

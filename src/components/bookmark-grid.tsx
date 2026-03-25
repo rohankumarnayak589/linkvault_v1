@@ -3,7 +3,7 @@
 import React from "react";
 import type { Bookmark } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
-import { Star, Pencil, Trash2, ExternalLink, Copy, Clock, Pin } from "lucide-react";
+import { Star, Pencil, Trash2, ExternalLink, Copy, Clock, Pin, RotateCcw, Trash } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface BookmarkGridProps {
@@ -13,6 +13,9 @@ interface BookmarkGridProps {
   onDelete: (id: string) => void;
   onEdit: (bookmark: Bookmark) => void;
   onOpen: (bookmark: Bookmark) => void;
+  isTrashView?: boolean;
+  onRestore?: (id: string) => void;
+  onPermanentDelete?: (id: string) => void;
 }
 
 // Domain-specific gradient + emoji
@@ -42,7 +45,10 @@ function getDomainMeta(url: string): { icon: string; gradient: string; name: str
   }
 }
 
-export function BookmarkGrid({ bookmarks, onToggleFavorite, onTogglePinned, onDelete, onEdit, onOpen }: BookmarkGridProps) {
+export function BookmarkGrid({ 
+  bookmarks, onToggleFavorite, onTogglePinned, onDelete, onEdit, onOpen,
+  isTrashView = false, onRestore, onPermanentDelete,
+}: BookmarkGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {bookmarks.map((bookmark, i) => {
@@ -79,28 +85,30 @@ export function BookmarkGrid({ bookmarks, onToggleFavorite, onTogglePinned, onDe
                   )}
                 </div>
               </div>
-              <div className="absolute top-3 right-3 flex flex-col gap-1.5 translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
-                <button
-                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(bookmark.id); }}
-                  className={`p-1.5 rounded-lg transition-all duration-150 ${
-                    bookmark.isFavorite
-                      ? "text-amber-400 bg-amber-400/20 backdrop-blur-sm"
-                      : "text-white/40 hover:text-amber-400 bg-black/15 backdrop-blur-sm"
-                  }`}
-                >
-                  <Star className={`h-3.5 w-3.5 ${bookmark.isFavorite ? "fill-current" : ""}`} />
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onTogglePinned(bookmark.id); }}
-                  className={`p-1.5 rounded-lg transition-all duration-150 ${
-                    bookmark.isPinned
-                      ? "text-blue-400 bg-blue-400/20 backdrop-blur-sm"
-                      : "text-white/40 hover:text-blue-400 bg-black/15 backdrop-blur-sm"
-                  }`}
-                >
-                  <Pin className={`h-3.5 w-3.5 ${bookmark.isPinned ? "fill-current" : ""}`} />
-                </button>
-              </div>
+              {!isTrashView && (
+                <div className="absolute top-3 right-3 flex flex-col gap-1.5 translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(bookmark.id); }}
+                    className={`p-1.5 rounded-lg transition-all duration-150 ${
+                      bookmark.isFavorite
+                        ? "text-amber-400 bg-amber-400/20 backdrop-blur-sm"
+                        : "text-white/40 hover:text-amber-400 bg-black/15 backdrop-blur-sm"
+                    }`}
+                  >
+                    <Star className={`h-3.5 w-3.5 ${bookmark.isFavorite ? "fill-current" : ""}`} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onTogglePinned(bookmark.id); }}
+                    className={`p-1.5 rounded-lg transition-all duration-150 ${
+                      bookmark.isPinned
+                        ? "text-blue-400 bg-blue-400/20 backdrop-blur-sm"
+                        : "text-white/40 hover:text-blue-400 bg-black/15 backdrop-blur-sm"
+                    }`}
+                  >
+                    <Pin className={`h-3.5 w-3.5 ${bookmark.isPinned ? "fill-current" : ""}`} />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Content */}
@@ -143,18 +151,31 @@ export function BookmarkGrid({ bookmarks, onToggleFavorite, onTogglePinned, onDe
                   <span className="text-[10px]">{formatDistanceToNow(new Date(bookmark.createdAt), { addSuffix: true })}</span>
                 </div>
                 <div className="flex items-center gap-0 opacity-0 group-hover:opacity-100 transition-all">
-                  <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Edit">
-                    <Pencil className="h-3 w-3" />
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(bookmark.url); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Copy">
-                    <Copy className="h-3 w-3" />
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); window.open(bookmark.url, "_blank"); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Open">
-                    <ExternalLink className="h-3 w-3" />
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Delete">
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  {isTrashView ? (
+                    <>
+                      <button onClick={(e) => { e.stopPropagation(); onRestore?.(bookmark.id); }} className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors" title="Restore">
+                        <RotateCcw className="h-4 w-4" />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); onPermanentDelete?.(bookmark.id); }} className="p-1.5 rounded text-destructive hover:bg-destructive/10 transition-colors" title="Delete Permanently">
+                        <Trash className="h-4 w-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Edit">
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(bookmark.url); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Copy">
+                        <Copy className="h-3 w-3" />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); window.open(bookmark.url, "_blank"); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Open">
+                        <ExternalLink className="h-3 w-3" />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Delete">
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

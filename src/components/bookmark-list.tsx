@@ -3,7 +3,7 @@
 import React from "react";
 import type { Bookmark } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
-import { Star, Pin, Trash2, Pencil, ExternalLink, Copy, Clock } from "lucide-react";
+import { Star, Pin, Trash2, Pencil, ExternalLink, Copy, Clock, RotateCcw, Trash } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface BookmarkListProps {
@@ -13,9 +13,15 @@ interface BookmarkListProps {
   onDelete: (id: string) => void;
   onEdit: (bookmark: Bookmark) => void;
   onOpen: (bookmark: Bookmark) => void;
+  isTrashView?: boolean;
+  onRestore?: (id: string) => void;
+  onPermanentDelete?: (id: string) => void;
 }
 
-export function BookmarkList({ bookmarks, onToggleFavorite, onTogglePinned, onDelete, onEdit, onOpen }: BookmarkListProps) {
+export function BookmarkList({ 
+  bookmarks, onToggleFavorite, onTogglePinned, onDelete, onEdit, onOpen,
+  isTrashView = false, onRestore, onPermanentDelete,
+}: BookmarkListProps) {
   return (
     <div className="space-y-1.5">
       {bookmarks.map((bookmark, i) => (
@@ -66,21 +72,34 @@ export function BookmarkList({ bookmarks, onToggleFavorite, onTogglePinned, onDe
           </div>
 
           <div className="flex items-center gap-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <button onClick={(e) => { e.stopPropagation(); onTogglePinned(bookmark.id); }} className={`p-1 rounded transition-colors ${bookmark.isPinned ? "text-blue-500 bg-blue-500/10" : "text-muted-foreground hover:text-blue-500 hover:bg-secondary"}`} title="Pin">
-                    <Pin className={`h-3 w-3 ${bookmark.isPinned ? "fill-current" : ""}`} />
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(bookmark.id); }} className={`p-1 rounded transition-colors ${bookmark.isFavorite ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground hover:text-amber-500 hover:bg-secondary"}`} title="Favorite">
-                    <Star className={`h-3 w-3 ${bookmark.isFavorite ? "fill-current" : ""}`} />
-                  </button>
-            <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(bookmark.url); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
-              <Copy className="h-4 w-4" />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {isTrashView ? (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); onRestore?.(bookmark.id); }} className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors" title="Restore">
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onPermanentDelete?.(bookmark.id); }} className="p-1.5 rounded-lg text-destructive hover:bg-destructive/10 transition-colors" title="Delete Permanently">
+                  <Trash className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); onTogglePinned(bookmark.id); }} className={`p-1 rounded transition-colors ${bookmark.isPinned ? "text-blue-500 bg-blue-500/10" : "text-muted-foreground hover:text-blue-500 hover:bg-secondary"}`} title="Pin">
+                  <Pin className={`h-3 w-3 ${bookmark.isPinned ? "fill-current" : ""}`} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(bookmark.id); }} className={`p-1 rounded transition-colors ${bookmark.isFavorite ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground hover:text-amber-500 hover:bg-secondary"}`} title="Favorite">
+                  <Star className={`h-3 w-3 ${bookmark.isFavorite ? "fill-current" : ""}`} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(bookmark.url); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+                  <Copy className="h-4 w-4" />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       ))}

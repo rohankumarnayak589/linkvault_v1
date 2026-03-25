@@ -149,14 +149,14 @@ export function Sidebar({
             }
             onDragOver={(e) => {
               e.preventDefault();
-              e.currentTarget.classList.add("bg-primary/10");
+              e.currentTarget.classList.add("bg-primary/20", "border-primary/50", "ring-2", "ring-primary/20");
             }}
             onDragLeave={(e) => {
-              e.currentTarget.classList.remove("bg-primary/10");
+              e.currentTarget.classList.remove("bg-primary/20", "border-primary/50", "ring-2", "ring-primary/20");
             }}
             onDrop={(e) => {
               e.preventDefault();
-              e.currentTarget.classList.remove("bg-primary/10");
+              e.currentTarget.classList.remove("bg-primary/20", "border-primary/50", "ring-2", "ring-primary/20");
               const bookmarkId = e.dataTransfer.getData("bookmarkId");
               if (bookmarkId) onMoveBookmark(bookmarkId, folder.id);
             }}
@@ -260,6 +260,15 @@ export function Sidebar({
         <button onClick={onToggle} className="p-2.5 hover:bg-secondary rounded-lg transition-colors" aria-label="Open sidebar">
           <PanelLeft className="h-4 w-4 text-muted-foreground" />
         </button>
+        <div className="mt-auto pb-4">
+          <button
+            onClick={() => onFilterChange({ ...filters, folderId: "__trash__", favoritesOnly: false, tags: [] })}
+            className={`p-2.5 rounded-lg transition-colors ${filters.folderId === "__trash__" ? "bg-primary/10 text-primary" : "hover:bg-secondary text-muted-foreground"}`}
+            title="Trash"
+          >
+            <span className="text-sm">🗑️</span>
+          </button>
+        </div>
       </div>
     );
   }
@@ -301,6 +310,11 @@ export function Sidebar({
             emoji="🕐" label="Recent" count={recentCount}
             onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
             isActive={false}
+          />
+          <NavButton
+            emoji="🗑️" label="Trash"
+            onClick={() => onFilterChange({ ...filters, folderId: "__trash__", favoritesOnly: false, tags: [] })}
+            isActive={filters.folderId === "__trash__"}
           />
         </div>
 
@@ -410,7 +424,7 @@ export function Sidebar({
                   >
                     <div className="h-4 w-4 rounded-full border border-border/40" style={{ backgroundColor: theme.preview }} />
                     <span className="flex-1">{theme.label}</span>
-                    <span className="text-xs opacity-60 font-mono uppercase">{theme.name.includes('dark') ? 'Dark' : 'Light'}</span>
+                    <span className="text-xs opacity-60 font-mono uppercase">{theme.isDark ? 'Dark' : 'Light'}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
