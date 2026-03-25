@@ -77,6 +77,42 @@ function DashboardContent() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Background image refresh — fetches & updates bookmarks that have no previewImage or favicon
+  useEffect(() => {
+    if (loading || bookmarks.length === 0) return;
+    const needsRefresh = bookmarks.filter(
+      (b) => !b.isDeleted && (!b.previewImage || !b.favicon)
+    ).slice(0, 15); // cap per session to avoid hammering
+    if (needsRefresh.length === 0) return;
+
+    let cancelled = false;
+    const refreshInBatches = async () => {
+      for (const bm of needsRefresh) {
+        if (cancelled) break;
+        try {
+          const res = await fetch(`/api/metadata?url=${encodeURIComponent(bm.url)}`);
+          if (!res.ok || cancelled) continue;
+          const data = await res.json();
+          const updates: Partial<typeof bm> = {};
+          if (data.previewImage && !bm.previewImage) updates.previewImage = data.previewImage;
+          if (data.favicon && !bm.favicon) updates.favicon = data.favicon;
+          if (data.title && !bm.title) updates.title = data.title;
+          if (data.description && !bm.description) updates.description = data.description;
+          if (Object.keys(updates).length > 0) {
+            await updateBookmark(bm.id, updates);
+            setBookmarks((prev) =>
+              prev.map((b) => (b.id === bm.id ? { ...b, ...updates } : b))
+            );
+          }
+        } catch { /* silently ignore per-bookmark errors */ }
+        // Small delay to avoid rate limiting
+        await new Promise((r) => setTimeout(r, 200));
+      }
+    };
+    refreshInBatches();
+    return () => { cancelled = true; };
+  }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Ctrl+K shortcut — opens Command Palette
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

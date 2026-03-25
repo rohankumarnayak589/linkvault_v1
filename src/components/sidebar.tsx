@@ -55,22 +55,46 @@ function NavButton({ emoji, label, count, onClick, isActive }: NavItemProps) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 cursor-pointer ${
+      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 cursor-pointer ${
         isActive
           ? "sidebar-item-active"
           : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
       }`}
     >
-      <span className="text-base w-5 text-center">{emoji}</span>
+      <span className="text-base w-5 text-center shrink-0">{emoji}</span>
       <span className="flex-1 text-left truncate">{label}</span>
       {count !== undefined && count > 0 && (
         <span
-          className={`text-[11px] min-w-5 h-5 flex items-center justify-center rounded-full font-semibold ${
-            isActive
-              ? "bg-primary/15 text-primary"
-              : "bg-secondary text-muted-foreground"
+          className={`text-[11px] min-w-5 h-5 flex items-center justify-center rounded-full font-semibold shrink-0 ${
+            isActive ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"
           }`}
         >
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
+
+// Compact 2-column nav tile (for grid layout)
+function CompactNavTile({
+  emoji, label, count, onClick, isActive
+}: NavItemProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer border ${
+        isActive
+          ? "bg-primary/10 text-primary border-primary/20 shadow-sm"
+          : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground border-transparent hover:border-border/30"
+      }`}
+    >
+      <span className="text-lg leading-none">{emoji}</span>
+      <span className="text-[11px] font-semibold leading-tight truncate w-full">{label}</span>
+      {count !== undefined && count > 0 && (
+        <span className={`text-[10px] font-bold ${
+          isActive ? "text-primary" : "text-muted-foreground/70"
+        }`}>
           {count}
         </span>
       )}
@@ -266,32 +290,34 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Scrollable content */}
-      <ScrollArea className="flex-1">
-        <div className="px-3 pb-4">
-          {/* Main Navigation */}
-          <div className="space-y-0.5 mb-2">
-            <NavButton
-              emoji="📚" label="All Bookmarks" count={totalCount}
-              onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
-              isActive={!filters.folderId && !filters.favoritesOnly && filters.tags.length === 0}
-            />
-            <NavButton
+      {/* Scrollable content — min-h-0 + overflow-y-auto gives a true native scrollbar */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <div className="px-3 pb-6 pt-1">
+          {/* All Bookmarks — full row */}
+          <NavButton
+            emoji="📚" label="All Bookmarks" count={totalCount}
+            onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
+            isActive={!filters.folderId && !filters.favoritesOnly && filters.tags.length === 0}
+          />
+
+          {/* 2x2 compact grid */}
+          <div className="grid grid-cols-2 gap-1.5 mt-1.5">
+            <CompactNavTile
               emoji="📂" label="Collections"
               onClick={onNavigateCollections}
               isActive={false}
             />
-            <NavButton
+            <CompactNavTile
               emoji="⭐" label="Favorites" count={favoritesCount}
               onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: true, tags: [] })}
               isActive={filters.favoritesOnly}
             />
-            <NavButton
+            <CompactNavTile
               emoji="🕐" label="Recent" count={recentCount}
               onClick={() => onFilterChange({ ...filters, folderId: null, favoritesOnly: false, tags: [] })}
               isActive={false}
             />
-            <NavButton
+            <CompactNavTile
               emoji="🗑️" label="Trash"
               onClick={() => onFilterChange({ ...filters, folderId: "__trash__", favoritesOnly: false, tags: [] })}
               isActive={filters.folderId === "__trash__"}
@@ -375,7 +401,7 @@ export function Sidebar({
             )}
           </div>
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Theme Picker — pinned to bottom */}
       <div className="px-4 py-3 border-t border-sidebar-border bg-sidebar shrink-0">
