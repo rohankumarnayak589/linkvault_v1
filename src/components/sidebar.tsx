@@ -276,9 +276,9 @@ export function Sidebar({
   return (
     <div className="w-[260px] bg-sidebar border-r border-sidebar-border flex flex-col h-screen sticky top-0 shrink-0 animate-slideIn overflow-hidden shadow-sm">
       {/* Logo */}
-      <div className="px-4 pt-5 pb-3 flex items-center justify-between">
+      <div className="px-4 pt-5 pb-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}>
+          <div className="h-8 w-8 rounded-lg flex items-center justify-center text-lg shadow-sm" style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}>
             🔖
           </div>
           <span className="font-bold text-foreground text-[15px] tracking-tight">LinkVault</span>
@@ -288,7 +288,8 @@ export function Sidebar({
         </button>
       </div>
 
-      <ScrollArea className="flex-1 px-3 py-1">
+      <ScrollArea className="flex-1">
+        <div className="px-3 py-1">
         {/* Main Navigation */}
         <div className="space-y-0.5 mb-1 px-3">
           <NavButton
@@ -371,30 +372,34 @@ export function Sidebar({
           <Separator className="my-4 opacity-50" />
         </div>
 
-        {/* Tags */}
-        <div className="mb-8">
-          <p className="px-3 mb-3 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 flex items-center gap-2">
-            🏷️ Top Tags
-          </p>
-          <div className="flex flex-wrap gap-1.5 px-3">
-            {allTags.slice(0, 12).map((tag) => (
-              <Badge
+        {/* Tags - News Section Style */}
+        <div className="mb-6">
+          <div className="px-3 mb-3 flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 flex items-center gap-2">
+              🏷️ Top Tags
+            </p>
+            {allTags.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
+          </div>
+          <div className="flex flex-col gap-1 px-1">
+            {allTags.slice(0, 5).map((tag) => (
+              <button
                 key={tag}
-                variant={filters.tags.includes(tag) ? "default" : "secondary"}
-                className={`cursor-pointer text-[10px] py-0.5 px-2.5 rounded-full font-medium transition-all duration-150 ${
-                  filters.tags.includes(tag)
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-secondary/60 text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
                 onClick={() => {
-                  const newTags = filters.tags.includes(tag)
-                    ? filters.tags.filter((t) => t !== tag)
-                    : [...filters.tags, tag];
+                  const newTags = filters.tags.includes(tag) ? [] : [tag];
                   onFilterChange({ ...filters, tags: newTags });
                 }}
+                className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-[12px] transition-all group ${
+                  filters.tags.includes(tag)
+                    ? "bg-primary/10 text-primary font-bold shadow-xs"
+                    : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                }`}
               >
-                {tag}
-              </Badge>
+                <div className="flex items-center gap-2">
+                  <span className="opacity-40 text-[10px]">#</span>
+                  <span className="truncate max-w-[140px]">{tag}</span>
+                </div>
+                <div className="h-1 w-1 rounded-full bg-border group-hover:bg-primary/40 transition-colors" />
+              </button>
             ))}
             {allTags.length === 0 && (
               <p className="px-3 text-[10px] text-muted-foreground/50 italic py-1">No tags yet</p>
@@ -403,52 +408,45 @@ export function Sidebar({
         </div>
       </ScrollArea>
 
-      {/* Theme + Meta */}
-      <div className="p-4 border-t border-sidebar-border bg-sidebar mt-auto">
-        <div className="mb-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 mb-2 px-1">
-            🎨 Personalize
+      {/* Theme Picker - Personalized Bottom Left */}
+      <div className="p-4 border-t border-sidebar-border bg-sidebar shrink-0">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70 mb-3 px-1 flex items-center gap-2">
+            🎨 Theme
           </p>
           <div className="grid grid-cols-2 gap-2">
             <DropdownMenu>
-              <DropdownMenuTrigger className="col-span-2 flex items-center justify-between px-3 py-2 bg-secondary/50 hover:bg-secondary rounded-lg text-xs font-semibold text-foreground transition-all cursor-pointer border border-border/40 shadow-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">
-                  {THEMES.find(t => t.name === currentTheme)?.emoji}
-                </span>
-                <span>{THEMES.find(t => t.name === currentTheme)?.label}</span>
-              </div>
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-            </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[228px] p-1.5 rounded-xl">
+              <DropdownMenuTrigger className="col-span-2 flex items-center justify-between px-3 py-2.5 bg-secondary/40 hover:bg-secondary/70 rounded-xl text-[12px] font-bold text-foreground transition-all cursor-pointer border border-border/20 shadow-xs group">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-5 w-5 rounded-full border-2 border-primary/20 flex items-center justify-center bg-card shadow-xs group-hover:scale-110 transition-transform">
+                    <span className="text-xs">
+                      {THEMES.find(t => t.name === currentTheme)?.emoji}
+                    </span>
+                  </div>
+                  <span>{THEMES.find(t => t.name === currentTheme)?.label}</span>
+                </div>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-data-[state=open]:rotate-180" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[228px] p-2 rounded-2xl shadow-xl border-border/40 backdrop-blur-xl bg-card/95" align="start" side="top" sideOffset={12}>
+                <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-1">Select Appearance</p>
                 {THEMES.map((theme) => (
                   <DropdownMenuItem 
                     key={theme.name}
                     onClick={() => onThemeChange(theme.name)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors mb-0.5 last:mb-0 ${
-                      currentTheme === theme.name ? "bg-primary/10 text-primary font-bold" : ""
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5 last:mb-0 ${
+                      currentTheme === theme.name ? "bg-primary/10 text-primary font-bold" : "hover:bg-secondary"
                     }`}
                   >
-                    <div className="h-4 w-4 rounded-full border border-border/40" style={{ backgroundColor: theme.preview }} />
-                    <span className="flex-1">{theme.label}</span>
-                    <span className="text-xs opacity-60 font-mono uppercase">{theme.isDark ? 'Dark' : 'Light'}</span>
+                    <div className="h-6 w-6 rounded-full border-2 border-border/40 flex items-center justify-center shadow-xs" style={{ backgroundColor: theme.preview }}>
+                       <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">✨</span>
+                    </div>
+                    <div className="flex-1 text-[13px]">{theme.label}</div>
+                    <span className="text-[9px] opacity-40 font-bold uppercase tracking-tighter bg-secondary/80 px-1.5 py-0.5 rounded-md">{theme.isDark ? 'Dark' : 'Light'}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
-        <div className="flex items-center gap-3 px-1 pt-1 group">
-          <div className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold border-2 border-primary/20 bg-primary/5 text-primary group-hover:scale-105 transition-transform">
-            GK
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-bold text-foreground truncate">Gulshan Kumar</p>
-            <p className="text-[10px] text-muted-foreground/70 truncate">Pro Account</p>
-          </div>
-          <button className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </button>
         </div>
       </div>
     </div>
