@@ -16,7 +16,8 @@ import {
   FileEdit, Download, Upload, Menu, MoreHorizontal, Palette,
 } from "lucide-react";
 import { THEMES } from "@/lib/icon-mapper";
-import { UserButton, SignInButton, useUser } from "@clerk/nextjs";
+import { useSession, signOut } from "next-auth/react";
+import Image from "next/image";
 
 interface TopNavProps {
   filters: SearchFilters;
@@ -36,7 +37,7 @@ export function TopNav({
   sortBy, onSortChange, onAddBookmark, onExport, onImport, onToggleSidebar,
 }: TopNavProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isSignedIn } = useUser();
+  const { data: session } = useSession();
 
   return (
     <div className="bg-card/80 backdrop-blur-sm border-b border-border px-5 py-3 flex items-center gap-3 shrink-0 z-20">
@@ -128,22 +129,29 @@ export function TopNav({
 
       {/* Auth UI */}
       <div className="flex items-center gap-2 pl-2 border-l border-border/50 ml-1">
-        {isSignedIn ? (
-          <UserButton
-            appearance={{
-              elements: {
-                userButtonAvatarBox: "h-8 w-8",
-                userButtonTrigger: "hover:scale-[1.05] transition-all",
-              },
-            }}
-          />
-        ) : (
-          <SignInButton mode="modal">
-            <Button variant="ghost" size="sm" className="text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl px-4 text-nowrap">
-              Sign In
-            </Button>
-          </SignInButton>
-        )}
+        {session?.user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="rounded-full overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all outline-none">
+              {session.user.image ? (
+                <Image src={session.user.image} alt="User profile" width={32} height={32} />
+              ) : (
+                <div className="h-8 w-8 bg-primary text-primary-foreground flex items-center justify-center font-semibold">
+                  {session.user.name?.[0] || session.user.email?.[0] || "?"}
+                </div>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <div className="px-2 py-1.5 text-sm">
+                <p className="font-semibold">{session.user.name}</p>
+                <p className="text-xs text-muted-foreground">{session.user.email}</p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })} className="text-red-500 font-medium">
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
       </div>
     </div>
   );

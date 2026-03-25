@@ -6,7 +6,7 @@ import type { Bookmark, Folder, ViewMode, SortOption, SearchFilters, ThemeName }
 import {
   getAllBookmarks, getAllFolders, addBookmark, updateBookmark,
   deleteBookmark, restoreBookmark, permanentlyDeleteBookmark,
-  addFolder, deleteFolder, updateFolder, seedSampleData, importBookmarks,
+  addFolder, deleteFolder, updateFolder, seedSampleData
 } from "@/lib/db";
 import { searchBookmarks, getAllTags } from "@/lib/search";
 import {
@@ -23,6 +23,7 @@ import { TopNav } from "@/components/top-nav";
 import { toast } from "sonner";
 import { Plus, Star, Pin } from "lucide-react";
 import { Suspense } from "react";
+import { useSession } from "next-auth/react";
 
 function DashboardContent() {
   const router = useRouter();
@@ -42,6 +43,13 @@ function DashboardContent() {
     query: "", folderId: null, tags: [], favoritesOnly: false, dateFrom: null, dateTo: null,
   });
   const [loading, setLoading] = useState(true);
+
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push("/sign-in");
+    },
+  });
 
   // Apply collection param from URL
   useEffect(() => {
@@ -63,6 +71,7 @@ function DashboardContent() {
   };
 
   const loadData = useCallback(async () => {
+    if (status !== "authenticated") return;
     try {
       await seedSampleData();
       const [bks, flds] = await Promise.all([getAllBookmarks(), getAllFolders()]);
@@ -73,7 +82,7 @@ function DashboardContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [status]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -284,9 +293,9 @@ function DashboardContent() {
     if (file.name.endsWith(".html") || file.name.endsWith(".htm")) parsed = parseHTMLBookmarks(text);
     else if (file.name.endsWith(".json")) parsed = parseJSONBookmarks(text);
     if (parsed.length > 0) {
-      const count = await importBookmarks(parsed as Bookmark[]);
-      await loadData();
-      toast.success(`Imported ${count} bookmarks 📥`);
+      // const count = await importBookmarks(parsed as Bookmark[]);
+      // await loadData();
+      toast.info("Bulk import is temporarily disabled during Postgres migration.");
     } else {
       toast.error("No bookmarks found in file");
     }

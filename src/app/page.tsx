@@ -11,7 +11,7 @@ import {
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { applyTheme, getSavedTheme } from "@/lib/icon-mapper";
 
 const fadeInUp = {
@@ -32,14 +32,14 @@ const staggerContainer = {
 };
 
 export default function LandingPage() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (status === "authenticated") {
       router.replace("/dashboard");
     }
-  }, [isLoaded, isSignedIn, router]);
+  }, [status, router]);
 
   useEffect(() => {
     const saved = getSavedTheme("linkvault-landing-theme");
@@ -98,7 +98,7 @@ export default function LandingPage() {
             transition={{ duration: 0.7, delay: 0.5 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link href="/sign-up">
+            <Link href="/sign-in">
               <Button size="lg" className="h-14 px-10 rounded-2xl text-lg font-bold bg-primary hover:scale-[1.02] transition-transform shadow-2xl shadow-primary/30">
                 Get Started for Free
               </Button>
@@ -281,7 +281,7 @@ export default function LandingPage() {
               Join thousands of collectors who trust LinkVault for their digital archive.
             </p>
             <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-              <Link href="/sign-up">
+              <Link href="/sign-in">
                 <Button size="lg" className="h-16 px-12 rounded-2xl text-xl font-black bg-background text-primary hover:bg-background/90 hover:scale-105 transition-all">
                   Join LinkVault Now
                 </Button>

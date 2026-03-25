@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useUser, UserButton } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -9,7 +10,7 @@ import { applyTheme, getSavedTheme } from "@/lib/icon-mapper";
 import Link from "next/link";
 
 export function LandingNav() {
-  const { isSignedIn } = useUser();
+  const { data: session } = useSession();
   const [currentTheme, setCurrentTheme] = useState<"ivory-warm" | "midnight">("ivory-warm");
 
   useEffect(() => {
@@ -62,12 +63,20 @@ export function LandingNav() {
             </AnimatePresence>
           </Button>
 
-          {isSignedIn ? (
+          {session?.user ? (
             <div className="flex items-center gap-4">
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm" className="font-semibold">Dashboard</Button>
               </Link>
-              <UserButton />
+              <div className="h-8 w-8 rounded-full overflow-hidden border border-border">
+                {session.user.image ? (
+                  <Image src={session.user.image} alt="User profile" width={32} height={32} />
+                ) : (
+                  <div className="h-full w-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                    {session.user.name?.[0] || "?"}
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <>
