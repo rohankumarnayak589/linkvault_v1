@@ -67,10 +67,16 @@ export async function GET(request: Request) {
         .slice(0, 5);
     }
 
+    const previewImage = 
+      root.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
+      root.querySelector('meta[name="twitter:image"]')?.getAttribute('content') ||
+      "";
+
     return NextResponse.json({
       title: title.trim(),
       description: description.trim(),
       favicon,
+      previewImage,
       tags: tags.slice(0, 8)
     });
 

@@ -68,25 +68,35 @@ export function BookmarkGrid({
               (e.currentTarget as HTMLElement).classList.remove("opacity-50");
             }}
           >
-            {/* Preview */}
-            <div className={`relative h-32 bg-gradient-to-br ${domain.gradient} overflow-hidden`}>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-5xl opacity-30 group-hover:opacity-50 group-hover:scale-110 transition-all duration-400">
-                  {domain.icon}
-                </span>
-              </div>
-              <div className="absolute top-3 left-3">
-                <div className="h-7 w-7 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            {/* Preview Banner */}
+            <div className="relative h-36 bg-secondary/30 overflow-hidden border-b border-border/40">
+              {bookmark.previewImage ? (
+                <img 
+                  src={bookmark.previewImage} 
+                  alt="" 
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} 
+                />
+              ) : (
+                <div className={`absolute inset-0 bg-gradient-to-br ${domain.gradient} opacity-80 flex items-center justify-center`}>
+                  <span className="text-5xl opacity-30 group-hover:opacity-50 group-hover:scale-110 transition-all duration-400">
+                    {domain.icon}
+                  </span>
+                </div>
+              )}
+              
+              <div className="absolute top-3 left-3 z-10">
+                <div className="h-8 w-8 rounded-lg bg-card/80 backdrop-blur-md flex items-center justify-center shadow-sm border border-border/40">
                   {bookmark.favicon ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={bookmark.favicon} alt="" className="h-4 w-4" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    <img src={bookmark.favicon} alt="" className="h-4.5 w-4.5" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   ) : (
-                    <span className="text-xs">{domain.icon}</span>
+                    <span className="text-sm">{domain.icon}</span>
                   )}
                 </div>
               </div>
+
               {!isTrashView && (
-                <div className="absolute top-3 right-3 flex flex-col gap-1.5 translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
+                <div className="absolute top-3 right-3 flex flex-col gap-1.5 translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all z-10">
                   <button
                     onClick={(e) => { e.stopPropagation(); onToggleFavorite(bookmark.id); }}
                     className={`p-1.5 rounded-lg transition-all duration-150 ${
@@ -111,19 +121,19 @@ export function BookmarkGrid({
               )}
             </div>
 
-            {/* Content */}
+            {/* Content Body */}
             <div className="p-3.5 space-y-2">
               <div 
                 className="cursor-pointer hover:underline decoration-primary/30"
                 onClick={() => onOpen(bookmark)}
               >
-                <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="flex items-center gap-1.5 mb-1">
                   {bookmark.favicon && (
                     <img src={bookmark.favicon} alt="" className="h-3 w-3 rounded-sm" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   )}
-                  <span className="text-[10px] text-muted-foreground font-medium truncate">{domain.name}</span>
+                  <span className="text-[10px] text-muted-foreground font-medium truncate uppercase tracking-wider">{domain.name}</span>
                 </div>
-                <h3 className="text-[13px] font-semibold text-card-foreground line-clamp-2 leading-snug">{bookmark.title}</h3>
+                <h3 className="text-[14px] font-bold text-card-foreground line-clamp-2 leading-tight">{bookmark.title}</h3>
               </div>
 
               {bookmark.description && (
@@ -131,24 +141,24 @@ export function BookmarkGrid({
               )}
 
               {bookmark.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1 pt-1">
                   {bookmark.tags.slice(0, 3).map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-[9px] px-2 py-0 rounded-full font-medium border-0">
+                    <Badge key={tag} variant="secondary" className="text-[9px] px-2 py-0 rounded-full font-medium border-0 bg-primary/5 text-primary">
                       {tag}
                     </Badge>
                   ))}
                   {bookmark.tags.length > 3 && (
-                    <Badge variant="secondary" className="text-[9px] px-2 py-0 rounded-full font-medium border-0">
+                    <Badge variant="secondary" className="text-[9px] px-2 py-0 rounded-full font-medium border-0 opacity-60">
                       +{bookmark.tags.length - 3}
                     </Badge>
                   )}
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-1.5 border-t border-border/40">
-                <div className="flex items-center gap-1 text-muted-foreground">
+              <div className="flex items-center justify-between pt-2 mt-2 border-t border-border/30">
+                <div className="flex items-center gap-1.5 text-muted-foreground/60">
                   <Clock className="h-3 w-3" />
-                  <span className="text-[10px]">{formatDistanceToNow(new Date(bookmark.createdAt), { addSuffix: true })}</span>
+                  <span className="text-[10px] font-medium">{formatDistanceToNow(new Date(bookmark.createdAt), { addSuffix: true })}</span>
                 </div>
                 <div className="flex items-center gap-0 opacity-0 group-hover:opacity-100 transition-all">
                   {isTrashView ? (
@@ -162,17 +172,17 @@ export function BookmarkGrid({
                     </>
                   ) : (
                     <>
-                      <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Edit">
-                        <Pencil className="h-3 w-3" />
+                      <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Edit">
+                        <Pencil className="h-3.5 w-3.5" />
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(bookmark.url); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Copy">
-                        <Copy className="h-3 w-3" />
+                      <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(bookmark.url); }} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Copy">
+                        <Copy className="h-3.5 w-3.5" />
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); window.open(bookmark.url, "_blank"); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Open">
-                        <ExternalLink className="h-3 w-3" />
+                      <button onClick={(e) => { e.stopPropagation(); window.open(bookmark.url, "_blank"); }} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Open">
+                        <ExternalLink className="h-3.5 w-3.5" />
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Delete">
-                        <Trash2 className="h-3 w-3" />
+                      <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} className="p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Delete">
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </>
                   )}

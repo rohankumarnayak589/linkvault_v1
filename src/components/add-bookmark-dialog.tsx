@@ -30,6 +30,7 @@ export function AddBookmarkDialog({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [favicon, setFavicon] = useState("");
+  const [previewImage, setPreviewImage] = useState("");
   const [folderId, setFolderId] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -46,13 +47,14 @@ export function AddBookmarkDialog({
       setTitle(editingBookmark.title);
       setDescription(editingBookmark.description);
       setFavicon(editingBookmark.favicon);
+      setPreviewImage(editingBookmark.previewImage || "");
       setFolderId(editingBookmark.folderId);
       setTags(editingBookmark.tags);
       setNotes(editingBookmark.notes);
       setIsFavorite(editingBookmark.isFavorite);
       setIsPinned(editingBookmark.isPinned || false);
     } else if (open) {
-      setUrl(""); setTitle(""); setDescription(""); setFavicon("");
+      setUrl(""); setTitle(""); setDescription(""); setFavicon(""); setPreviewImage("");
       setFolderId(null); setTags([]); setTagInput(""); setNotes(""); setIsFavorite(false); setIsPinned(false);
     }
   }, [open, editingBookmark]);
@@ -68,6 +70,7 @@ export function AddBookmarkDialog({
         if (data.title && (!title || title === url)) setTitle(data.title);
         if (data.description && !description) setDescription(data.description);
         if (data.favicon) setFavicon(data.favicon);
+        if (data.previewImage) setPreviewImage(data.previewImage);
         if (data.tags && data.tags.length > 0 && tags.length === 0) {
           setTags(data.tags);
         }
@@ -103,7 +106,7 @@ export function AddBookmarkDialog({
     if (!url.trim()) return;
     const data: Omit<Bookmark, "id" | "createdAt" | "updatedAt" | "visitCount" | "lastVisitedAt"> = {
       url: url.trim(), title: title.trim() || url.trim(), description: description.trim(),
-      favicon, previewImage: "", tags, folderId, notes: notes.trim(),
+      favicon, previewImage, tags, folderId, notes: notes.trim(),
       isFavorite, isPinned, isArchived: false, isDeleted: false, deletedAt: null,
     };
     if (isEditing && editingBookmark) {
@@ -146,18 +149,24 @@ export function AddBookmarkDialog({
 
           {/* Preview card */}
           {(favicon || title) && (
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/40 border border-border/30">
-              <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center shrink-0 overflow-hidden border border-border/30">
-                {favicon ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={favicon} alt="" className="h-6 w-6" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                ) : (
-                  <Link2 className="h-4 w-4 text-muted-foreground" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-foreground truncate">{title || "Untitled"}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{url}</p>
+            <div className="group relative overflow-hidden rounded-xl border border-border/40 bg-secondary/20 transition-all hover:bg-secondary/30">
+              {previewImage && (
+                <div className="h-28 w-full overflow-hidden border-b border-border/20">
+                  <img src={previewImage} alt="Preview" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" onError={() => setPreviewImage("")} />
+                </div>
+              )}
+              <div className="flex items-center gap-3 p-3">
+                <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center shrink-0 overflow-hidden border border-border/30">
+                  {favicon ? (
+                    <img src={favicon} alt="" className="h-6 w-6" onError={() => setFavicon("")} />
+                  ) : (
+                    <Link2 className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-semibold text-foreground truncate">{title || "Untitled"}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{url}</p>
+                </div>
               </div>
             </div>
           )}
