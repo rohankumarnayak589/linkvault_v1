@@ -258,7 +258,7 @@ export function Sidebar({
 
   if (!open) {
     return (
-      <div className="w-14 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-5 gap-3 shrink-0 h-screen sticky top-0">
+      <div className="hidden md:flex w-14 bg-sidebar border-r border-sidebar-border flex-col items-center py-5 gap-3 shrink-0 h-screen sticky top-0 z-30 transition-all duration-300">
         <button onClick={onToggle} className="p-2.5 hover:bg-secondary rounded-lg transition-colors" aria-label="Open sidebar">
           <PanelLeft className="h-4 w-4 text-muted-foreground" />
         </button>
@@ -276,7 +276,10 @@ export function Sidebar({
   }
 
   return (
-    <div className="w-[300px] bg-sidebar border-r border-sidebar-border flex flex-col h-screen sticky top-0 shrink-0 animate-slideIn overflow-hidden shadow-sm">
+    <div className={`
+      fixed inset-y-0 left-0 z-40 w-[280px] sm:w-[300px] bg-sidebar border-r border-sidebar-border flex flex-col h-screen shrink-0 transition-transform duration-300 ease-in-out shadow-xl md:shadow-sm md:relative md:translate-x-0 overflow-hidden
+      ${open ? "translate-x-0" : "-translate-x-full"}
+    `}>
       {/* Logo */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">

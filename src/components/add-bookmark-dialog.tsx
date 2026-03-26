@@ -21,10 +21,11 @@ interface AddBookmarkDialogProps {
   editingBookmark: Bookmark | null;
   folders: Folder[];
   existingTags: string[];
+  defaultFolderId?: string | null;
 }
 
 export function AddBookmarkDialog({
-  open, onOpenChange, onSave, onUpdate, editingBookmark, folders, existingTags,
+  open, onOpenChange, onSave, onUpdate, editingBookmark, folders, existingTags, defaultFolderId,
 }: AddBookmarkDialogProps) {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
@@ -55,9 +56,9 @@ export function AddBookmarkDialog({
       setIsPinned(editingBookmark.isPinned || false);
     } else if (open) {
       setUrl(""); setTitle(""); setDescription(""); setFavicon(""); setPreviewImage("");
-      setFolderId(null); setTags([]); setTagInput(""); setNotes(""); setIsFavorite(false); setIsPinned(false);
+      setFolderId(defaultFolderId || null); setTags([]); setTagInput(""); setNotes(""); setIsFavorite(false); setIsPinned(false);
     }
-  }, [open, editingBookmark]);
+  }, [open, editingBookmark, defaultFolderId]);
 
   const fetchMetadata = useCallback(async (inputUrl: string) => {
     if (!inputUrl || !inputUrl.startsWith("http") || fetching) return;
@@ -123,87 +124,87 @@ export function AddBookmarkDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border rounded-2xl max-w-lg shadow-xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-foreground text-lg font-bold flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            {isEditing ? "Edit Bookmark" : "Add New Bookmark"}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="bg-card border-border rounded-2xl sm:max-w-lg w-[95vw] shadow-xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+        <div className="p-6">
+          <DialogHeader>
+            <DialogTitle className="text-foreground text-lg font-bold flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              {isEditing ? "Edit Bookmark" : "Add New Bookmark"}
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-4 mt-2">
-          {/* URL */}
-          <div className="space-y-1.5">
-            <Label htmlFor="bookmark-url" className="text-[13px] text-muted-foreground font-medium">URL</Label>
-            <div className="relative">
-              <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input id="bookmark-url" value={url} onChange={(e) => setUrl(e.target.value)}
-                onPaste={(e) => { const pasted = e.clipboardData.getData("text"); if (pasted.startsWith("http")) setUrl(pasted); }}
-                placeholder="Paste URL here…"
-                className="pl-10 h-11 bg-secondary/40 border-border/50 rounded-xl text-[13px] focus-visible:ring-2 focus-visible:ring-primary/40"
-                autoFocus={!isEditing}
-              />
-              {fetching && <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin" />}
-            </div>
-          </div>
-
-          {/* Preview card */}
-          {(favicon || title) && (
-            <div className="group relative overflow-hidden rounded-xl border border-border/40 bg-secondary/20 transition-all hover:bg-secondary/30">
-              {previewImage && (
-                <div className="h-28 w-full overflow-hidden border-b border-border/20">
-                  <img src={previewImage} alt="Preview" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" onError={() => setPreviewImage("")} />
-                </div>
-              )}
-              <div className="flex items-center gap-3 p-3">
-                <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center shrink-0 overflow-hidden border border-border/30">
-                  {favicon ? (
-                    <img src={favicon} alt="" className="h-6 w-6" onError={() => setFavicon("")} />
-                  ) : (
-                    <Link2 className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-semibold text-foreground truncate">{title || "Untitled"}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{url}</p>
-                </div>
+          <div className="space-y-5 mt-6 pb-2">
+            {/* URL */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bookmark-url" className="text-[13px] text-muted-foreground font-medium">URL</Label>
+              <div className="relative">
+                <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="bookmark-url" value={url} onChange={(e) => setUrl(e.target.value)}
+                  placeholder="Paste URL here…"
+                  className="pl-10 h-11 bg-secondary/40 border-border/50 rounded-xl text-[13px] focus-visible:ring-2 focus-visible:ring-primary/40"
+                  autoFocus={!isEditing}
+                />
+                {fetching && <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin" />}
               </div>
             </div>
-          )}
 
-          {/* Title */}
-          <div className="space-y-1.5">
-            <Label htmlFor="bookmark-title" className="text-[13px] text-muted-foreground font-medium">Title</Label>
-            <Input id="bookmark-title" value={title} onChange={(e) => setTitle(e.target.value)}
-              placeholder="Bookmark title"
-              className="h-10 bg-secondary/40 border-border/50 rounded-xl text-[13px] focus-visible:ring-2 focus-visible:ring-primary/40"
-            />
-          </div>
+            {/* Preview card */}
+            {(favicon || title) && (
+              <div className="group relative overflow-hidden rounded-xl border border-border/40 bg-secondary/20 transition-all hover:bg-secondary/30">
+                {previewImage && (
+                  <div className="h-28 w-full overflow-hidden border-b border-border/20">
+                    <img src={previewImage} alt="Preview" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" onError={() => setPreviewImage("")} />
+                  </div>
+                )}
+                <div className="flex items-center gap-3 p-3">
+                  <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center shrink-0 overflow-hidden border border-border/30">
+                    {favicon ? (
+                      <img src={favicon} alt="" className="h-6 w-6" onError={() => setFavicon("")} />
+                    ) : (
+                      <Link2 className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-foreground truncate">{title || "Untitled"}</p>
+                    <p className="text-[10px] text-muted-foreground truncate break-all">{url}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <Label htmlFor="bookmark-desc" className="text-[13px] text-muted-foreground font-medium">Description</Label>
-            <Textarea id="bookmark-desc" value={description} onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional description"
-              className="bg-secondary/40 border-border/50 rounded-xl text-[13px] focus-visible:ring-2 focus-visible:ring-primary/40 resize-none min-h-[56px]"
-              rows={2}
-            />
-          </div>
+            {/* Title */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bookmark-title" className="text-[13px] text-muted-foreground font-medium">Title</Label>
+              <Input id="bookmark-title" value={title} onChange={(e) => setTitle(e.target.value)}
+                placeholder="Bookmark title"
+                className="h-10 bg-secondary/40 border-border/50 rounded-xl text-[13px] focus-visible:ring-2 focus-visible:ring-primary/40"
+              />
+            </div>
 
-          {/* Collection */}
-          <div className="space-y-1.5">
-            <Label className="text-[13px] text-muted-foreground font-medium">Collection</Label>
-            <select value={folderId || ""} onChange={(e) => setFolderId(e.target.value || null)}
-              className="w-full h-10 px-3.5 rounded-xl bg-secondary/40 border border-border/50 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-            >
-              <option value="">No collection</option>
-              {folders.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.icon} {f.parentId ? "└ " : ""}{f.name}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Description */}
+            <div className="space-y-1.5">
+              <Label htmlFor="bookmark-desc" className="text-[13px] text-muted-foreground font-medium">Description</Label>
+              <Textarea id="bookmark-desc" value={description} onChange={(e) => setDescription(e.target.value)}
+                placeholder="Optional description"
+                className="bg-secondary/40 border-border/50 rounded-xl text-[13px] focus-visible:ring-2 focus-visible:ring-primary/40 resize-none min-h-[56px]"
+                rows={2}
+              />
+            </div>
+
+            {/* Collection */}
+            <div className="space-y-1.5">
+              <Label className="text-[13px] text-muted-foreground font-medium">Collection</Label>
+              <select value={folderId || ""} onChange={(e) => setFolderId(e.target.value || null)}
+                className="w-full h-10 px-3.5 rounded-xl bg-secondary/40 border border-border/50 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+              >
+                <option value="">No collection</option>
+                {folders.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.icon} {f.parentId ? "└ " : ""}{f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
           {/* Tags */}
           <div className="space-y-1.5">
@@ -267,11 +268,12 @@ export function AddBookmarkDialog({
             </Button>
           </div>
 
-          {!isEditing && (
-            <p className="text-center text-[11px] text-muted-foreground/60 pb-2">
-              Pro tip: Press <kbd className="px-1.5 py-0.5 rounded-md bg-secondary text-[10px] font-mono font-semibold">Ctrl+K</kbd> to quick-add from anywhere
-            </p>
-          )}
+            {!isEditing && (
+              <p className="text-center text-[11px] text-muted-foreground/60 pb-2">
+                Pro tip: Press <kbd className="px-1.5 py-0.5 rounded-md bg-secondary text-[10px] font-mono font-semibold">Ctrl+K</kbd> to quick-add from anywhere
+              </p>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

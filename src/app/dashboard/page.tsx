@@ -343,7 +343,14 @@ function DashboardContent() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background relative">
+      {/* Mobile Sidebar Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-background/40 backdrop-blur-[2px] z-30 md:hidden transition-all duration-300 animate-in fade-in"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       <Sidebar
         folders={folders} allTags={allTags}
         bookmarkCounts={bookmarks.reduce((acc, b) => { 
@@ -373,7 +380,7 @@ function DashboardContent() {
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-4 sm:p-6 bg-secondary/10">
           {/* Stats Bar */}
           {!isTrashView && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -504,6 +511,7 @@ function DashboardContent() {
         open={showAddDialog} onOpenChange={(open: boolean) => { setShowAddDialog(open); if (!open) setEditingBookmark(null); }}
         onSave={handleAddBookmark} onUpdate={handleUpdateBookmark}
         editingBookmark={editingBookmark} folders={folders} existingTags={allTags}
+        defaultFolderId={filters.folderId && !filters.folderId.startsWith("__") ? filters.folderId : null}
       />
 
       <CommandPalette

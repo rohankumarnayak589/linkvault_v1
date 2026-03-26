@@ -65,6 +65,20 @@ export async function getBookmark(id: string): Promise<Bookmark | undefined> {
 
 export async function addBookmark(data: Omit<Bookmark, "id" | "createdAt" | "updatedAt" | "visitCount" | "lastVisitedAt">): Promise<Bookmark> {
   const userId = await requireAuth();
+
+  // Check for existing bookmark with same URL for this user
+  const existing = await db.query.bookmarks.findFirst({
+    where: and(
+      eq(bookmarks.userId, userId),
+      ilike(bookmarks.url, data.url),
+      eq(bookmarks.isDeleted, false)
+    ),
+  });
+
+  if (existing) {
+    throw new Error(`Duplicate Bookmark: "${existing.title}" is already in your vault.`);
+  }
+
   const newId = await generateId();
 
   await db.insert(bookmarks).values({
