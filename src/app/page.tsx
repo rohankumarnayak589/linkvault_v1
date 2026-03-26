@@ -74,12 +74,24 @@ export default function LandingPage() {
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8"
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.85] mb-8"
           >
             Your digital vault <br />
-            <span className="text-muted-foreground/40">for everything </span> 
-            <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/50 bg-clip-text text-transparent">awesome.</span>
+            <span className="text-muted-foreground/20">for everything </span> 
+            <motion.span 
+              animate={{ 
+                backgroundImage: [
+                  "linear-gradient(to right, var(--primary), #3b82f6)",
+                  "linear-gradient(to right, #3b82f6, #8b5cf6)",
+                  "linear-gradient(to right, #8b5cf6, var(--primary))"
+                ] 
+              }}
+              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+              className="bg-clip-text text-transparent bg-300% animate-gradient"
+            >
+              awesome.
+            </motion.span>
           </motion.h1>
 
           <motion.p 

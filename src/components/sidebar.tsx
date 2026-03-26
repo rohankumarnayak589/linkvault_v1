@@ -258,7 +258,7 @@ export function Sidebar({
 
   if (!open) {
     return (
-      <div className="hidden md:flex w-14 bg-sidebar border-r border-sidebar-border flex-col items-center py-5 gap-3 shrink-0 h-screen sticky top-0 z-30 transition-all duration-300">
+      <div className="hidden md:flex w-14 bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex-col items-center py-5 gap-3 shrink-0 h-screen sticky top-0 z-30 transition-all duration-300">
         <button onClick={onToggle} className="p-2.5 hover:bg-secondary rounded-lg transition-colors" aria-label="Open sidebar">
           <PanelLeft className="h-4 w-4 text-muted-foreground" />
         </button>
@@ -277,7 +277,7 @@ export function Sidebar({
 
   return (
     <div className={`
-      fixed inset-y-0 left-0 z-40 w-[280px] sm:w-[300px] bg-sidebar border-r border-sidebar-border flex flex-col h-screen shrink-0 transition-transform duration-300 ease-in-out shadow-xl md:shadow-sm md:relative md:translate-x-0 overflow-hidden
+      fixed inset-y-0 left-0 z-40 w-[280px] sm:w-[300px] bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex flex-col h-screen shrink-0 transition-transform duration-300 ease-in-out shadow-xl md:shadow-sm md:relative md:translate-x-0 overflow-hidden
       ${open ? "translate-x-0" : "-translate-x-full"}
     `}>
       {/* Logo */}

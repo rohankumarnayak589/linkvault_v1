@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { Bookmark } from "@/lib/types";
-import { Search, ExternalLink, Clock, Star, Tag, X } from "lucide-react";
+import { Search, ExternalLink, Clock, Star, Tag, X, Palette } from "lucide-react";
 import Fuse from "fuse.js";
 import { formatDistanceToNow } from "date-fns";
+
+import { THEMES } from "@/lib/icon-mapper";
+import type { ThemeName } from "@/lib/types";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -12,10 +15,12 @@ interface CommandPaletteProps {
   bookmarks: Bookmark[];
   onOpen: (bookmark: Bookmark) => void;
   onFilterTag: (tag: string) => void;
+  onThemeChange: (theme: ThemeName) => void;
 }
 
-export function CommandPalette({ open, onClose, bookmarks, onOpen, onFilterTag }: CommandPaletteProps) {
+export function CommandPalette({ open, onClose, bookmarks, onOpen, onFilterTag, onThemeChange }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<"search" | "theme">("search");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -32,13 +37,20 @@ export function CommandPalette({ open, onClose, bookmarks, onOpen, onFilterTag }
     includeScore: true,
   });
 
-  const results = query.trim()
-    ? fuse.search(query.trim()).map(r => r.item).slice(0, 8)
-    : bookmarks.filter(b => !b.isDeleted).slice(0, 8);
+  const filteredThemes = query.trim()
+    ? THEMES.filter(t => t.name.toLowerCase().includes(query.toLowerCase()) || t.label.toLowerCase().includes(query.toLowerCase()))
+    : THEMES;
+
+  const results = mode === "search"
+    ? (query.trim()
+        ? fuse.search(query.trim()).map(r => r.item).slice(0, 8)
+        : bookmarks.filter(b => !b.isDeleted).slice(0, 8))
+    : filteredThemes;
 
   useEffect(() => {
     if (open) {
       setQuery("");
+      setMode("search");
       setActiveIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
@@ -46,11 +58,23 @@ export function CommandPalette({ open, onClose, bookmarks, onOpen, onFilterTag }
 
   useEffect(() => {
     setActiveIndex(0);
-  }, [query]);
+  }, [query, mode]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!open) return;
-    if (e.key === "Escape") { onClose(); return; }
+    if (e.key === "Escape") { 
+      if (mode === "theme") { setMode("search"); setQuery(""); return; }
+      onClose(); 
+      return; 
+    }
+    
+    // Toggle Mode
+    if (e.key === "/" && mode === "search" && !query) {
+      e.preventDefault();
+      setMode("theme");
+      return;
+    }
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex(i => Math.min(i + 1, results.length - 1));
@@ -60,10 +84,17 @@ export function CommandPalette({ open, onClose, bookmarks, onOpen, onFilterTag }
       setActiveIndex(i => Math.max(i - 1, 0));
     }
     if (e.key === "Enter" && results[activeIndex]) {
-      onOpen(results[activeIndex]);
-      onClose();
+      if (mode === "search") {
+        onOpen(results[activeIndex] as Bookmark);
+        onClose();
+      } else {
+        const theme = results[activeIndex] as typeof THEMES[0];
+        onThemeChange(theme.name as ThemeName);
+        setMode("search");
+        setQuery("");
+      }
     }
-  }, [open, results, activeIndex, onClose, onOpen]);
+  }, [open, results, activeIndex, onClose, onOpen, mode, onThemeChange]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -115,10 +146,10 @@ export function CommandPalette({ open, onClose, bookmarks, onOpen, onFilterTag }
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto py-2">
           {results.length === 0 ? (
             <div className="px-4 py-8 text-center text-[13px] text-muted-foreground/60">
-              No bookmarks found for &ldquo;{query}&rdquo;
+              No {mode === "search" ? "bookmarks" : "themes"} found for &ldquo;{query}&rdquo;
             </div>
-          ) : (
-            results.map((bookmark, i) => (
+          ) : mode === "search" ? (
+            (results as Bookmark[]).map((bookmark, i) => (
               <button
                 key={bookmark.id}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors group ${
@@ -160,6 +191,48 @@ export function CommandPalette({ open, onClose, bookmarks, onOpen, onFilterTag }
                 </div>
               </button>
             ))
+          ) : (
+            <>
+              {!query && (
+                <button
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors group ${
+                    activeIndex === 0 ? "bg-primary/8 text-foreground" : "hover:bg-secondary/60 text-foreground"
+                  }`}
+                  onClick={() => { 
+                    const randomTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
+                    onThemeChange(randomTheme.name as ThemeName);
+                    onClose();
+                  }}
+                  onMouseEnter={() => setActiveIndex(0)}
+                >
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center shrink-0 border border-border/30">
+                    <Star className="h-4 w-4 text-white animate-spin-slow" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[13px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">Surprise Me!</p>
+                    <p className="text-[11px] text-muted-foreground">Pick a random catchy theme</p>
+                  </div>
+                </button>
+              )}
+              {(results as typeof THEMES).map((theme, i) => (
+                <button
+                  key={theme.name}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors group ${
+                    i + (!query ? 1 : 0) === activeIndex ? "bg-primary/8 text-foreground" : "hover:bg-secondary/60 text-foreground"
+                  }`}
+                  onClick={() => { onThemeChange(theme.name as ThemeName); setMode("search"); setQuery(""); }}
+                  onMouseEnter={() => setActiveIndex(i + (!query ? 1 : 0))}
+                >
+                  <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-border/30" style={{ background: theme.colors.sidebar, color: theme.colors.primary }}>
+                    <Palette className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[13px] font-semibold">{theme.label}</p>
+                    <p className="text-[11px] text-muted-foreground">{theme.name.includes("dark") ? "Dark Mode" : "Light Mode"}</p>
+                  </div>
+                </button>
+              ))}
+            </>
           )}
         </div>
 

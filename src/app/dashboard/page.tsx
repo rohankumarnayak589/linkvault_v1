@@ -21,9 +21,11 @@ import { AddBookmarkDialog } from "@/components/add-bookmark-dialog";
 import { CommandPalette } from "@/components/command-palette";
 import { TopNav } from "@/components/top-nav";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import { Plus, Star, Pin } from "lucide-react";
 import { Suspense } from "react";
 import { useSession } from "next-auth/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function DashboardContent() {
   const router = useRouter();
@@ -39,6 +41,18 @@ function DashboardContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentTheme, setCurrentTheme] = useState<ThemeName>("ivory-warm");
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  // Keyboard shortcut for Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
   const [filters, setFilters] = useState<SearchFilters>({
     query: "", folderId: null, tags: [], favoritesOnly: false, dateFrom: null, dateTo: null,
   });
@@ -195,15 +209,31 @@ function DashboardContent() {
     toast.success("Bookmark saved! 🎉", { 
       description: folder ? `Added to "${folder.name}"` : `Added to "${data.title}"` 
     });
+    
+    // Celebration
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"]
+    });
+
     setShowAddDialog(false);
   };
 
   const handleMoveBookmark = async (bookmarkId: string, folderId: string | null) => {
-    const updated = await updateBookmark(bookmarkId, { folderId });
-    if (updated) {
-      setBookmarks((prev) => prev.map((b) => (b.id === bookmarkId ? updated : b)));
+    // Optimistic update
+    const originalBookmarks = [...bookmarks];
+    setBookmarks(prev => prev.map(b => b.id === bookmarkId ? { ...b, folderId } : b));
+    
+    try {
+      const updated = await updateBookmark(bookmarkId, { folderId });
+      if (!updated) throw new Error("Update failed");
       const folder = folders.find(f => f.id === folderId);
       toast.success(folder ? `Moved to ${folder.icon} ${folder.name}` : "Moved to Library");
+    } catch (error) {
+      setBookmarks(originalBookmarks);
+      toast.error("Failed to move bookmark");
     }
   };
 
@@ -234,17 +264,37 @@ function DashboardContent() {
 
   const handleToggleFavorite = async (id: string) => {
     const b = bookmarks.find((bk) => bk.id === id);
-    if (b) {
-      await handleUpdateBookmark(id, { isFavorite: !b.isFavorite });
-      toast(b.isFavorite ? "Removed from favorites" : "Added to favorites ⭐");
+    if (!b) return;
+
+    // Optimistic
+    const originalBookmarks = [...bookmarks];
+    const newState = !b.isFavorite;
+    setBookmarks(prev => prev.map(bk => bk.id === id ? { ...bk, isFavorite: newState } : bk));
+    toast(newState ? "Added to favorites ⭐" : "Removed from favorites");
+
+    try {
+      await updateBookmark(id, { isFavorite: newState });
+    } catch (error) {
+      setBookmarks(originalBookmarks);
+      toast.error("Failed to update favorite");
     }
   };
 
   const handleTogglePinned = async (id: string) => {
     const b = bookmarks.find((bk) => bk.id === id);
-    if (b) {
-      await handleUpdateBookmark(id, { isPinned: !b.isPinned });
-      toast(b.isPinned ? "Unpinned from top" : "Pinned to top 📌");
+    if (!b) return;
+
+    // Optimistic
+    const originalBookmarks = [...bookmarks];
+    const newState = !b.isPinned;
+    setBookmarks(prev => prev.map(bk => bk.id === id ? { ...bk, isPinned: newState } : bk));
+    toast(newState ? "Pinned to top 📌" : "Unpinned from top");
+
+    try {
+      await updateBookmark(id, { isPinned: newState });
+    } catch (error) {
+      setBookmarks(originalBookmarks);
+      toast.error("Failed to update pin");
     }
   };
 
@@ -520,6 +570,7 @@ function DashboardContent() {
         bookmarks={bookmarks}
         onOpen={(bookmark) => { handleOpenBookmark(bookmark); }}
         onFilterTag={(tag) => setFilters(prev => ({ ...prev, tags: [tag], folderId: null, favoritesOnly: false }))}
+        onThemeChange={handleThemeChange}
       />
     </div>
   );

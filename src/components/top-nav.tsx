@@ -40,7 +40,7 @@ export function TopNav({
   const { data: session } = useSession();
 
   return (
-    <div className="bg-card/80 backdrop-blur-sm border-b border-border px-5 py-3 flex items-center gap-3 shrink-0 z-20">
+    <div className="bg-card/80 backdrop-blur-xl border-b border-border/50 px-5 py-3 flex items-center gap-3 shrink-0 z-20 sticky top-0">
       <button onClick={onToggleSidebar} className="p-2 hover:bg-secondary rounded-lg transition-colors md:hidden">
         <Menu className="h-5 w-5 text-muted-foreground" />
       </button>

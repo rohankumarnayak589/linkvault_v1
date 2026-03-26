@@ -47,7 +47,15 @@ export type ThemeName =
   | "forest-dew"
   | "midnight"
   | "lavender-haze"
-  | "sunset-glow";
+  | "sunset-glow"
+  | "vscode-dark"
+  | "github-dark"
+  | "github-light"
+  | "dracula"
+  | "one-dark"
+  | "ayu-mirage"
+  | "synthwave-84"
+  | "nord";
 
 export type ViewMode = "grid" | "list";
 export type SortOption = "dateAdded" | "title" | "mostVisited" | "dateUpdated";
