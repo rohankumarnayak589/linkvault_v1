@@ -139,7 +139,19 @@ export function AddBookmarkDialog({
               <Label htmlFor="bookmark-url" className="text-[13px] text-muted-foreground font-medium">URL</Label>
               <div className="relative">
                 <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="bookmark-url" value={url} onChange={(e) => setUrl(e.target.value)}
+                <Input id="bookmark-url" value={url} 
+                  onChange={(e) => setUrl(e.target.value)}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const text = e.clipboardData.getData("text");
+                    // Avoid duplicating if we somehow get the same text or just append
+                    // In a normal paste, url should be empty or we are prepending/appending
+                    setUrl(prev => {
+                      const selectionStart = (e.target as HTMLInputElement).selectionStart || 0;
+                      const selectionEnd = (e.target as HTMLInputElement).selectionEnd || 0;
+                      return prev.substring(0, selectionStart) + text + prev.substring(selectionEnd);
+                    });
+                  }}
                   placeholder="Paste URL here…"
                   className="pl-10 h-11 bg-secondary/40 border-border/50 rounded-xl text-[13px] focus-visible:ring-2 focus-visible:ring-primary/40"
                   autoFocus={!isEditing}
