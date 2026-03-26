@@ -44,18 +44,10 @@ export interface User {
 export type ThemeName =
   | "ivory-warm"
   | "ocean-breeze"
-  | "forest-dew"
-  | "midnight"
-  | "lavender-haze"
-  | "sunset-glow"
-  | "vscode-dark"
-  | "github-dark"
   | "github-light"
+  | "vscode-dark"
   | "dracula"
-  | "one-dark"
-  | "ayu-mirage"
-  | "synthwave-84"
-  | "nord";
+  | "synthwave-84";
 
 export type ViewMode = "grid" | "list";
 export type SortOption = "dateAdded" | "title" | "mostVisited" | "dateUpdated";

@@ -11,15 +11,15 @@ import Link from "next/link";
 
 export function LandingNav() {
   const { data: session } = useSession();
-  const [currentTheme, setCurrentTheme] = useState<"ivory-warm" | "midnight">("ivory-warm");
+  const [currentTheme, setCurrentTheme] = useState<"ivory-warm" | "vscode-dark">("ivory-warm");
 
   useEffect(() => {
-    const saved = getSavedTheme("linkvault-landing-theme") as "ivory-warm" | "midnight";
-    setCurrentTheme(saved === "midnight" ? "midnight" : "ivory-warm");
+    const saved = getSavedTheme("linkvault-landing-theme") as "ivory-warm" | "vscode-dark";
+    setCurrentTheme(saved === "vscode-dark" ? "vscode-dark" : "ivory-warm");
   }, []);
 
   const toggleTheme = () => {
-    const next = currentTheme === "ivory-warm" ? "midnight" : "ivory-warm";
+    const next = currentTheme === "ivory-warm" ? "vscode-dark" : "ivory-warm";
     setCurrentTheme(next);
     applyTheme(next, "linkvault-landing-theme");
   };

@@ -21,7 +21,6 @@ import { AddBookmarkDialog } from "@/components/add-bookmark-dialog";
 import { CommandPalette } from "@/components/command-palette";
 import { TopNav } from "@/components/top-nav";
 import { toast } from "sonner";
-import confetti from "canvas-confetti";
 import { Plus, Star, Pin } from "lucide-react";
 import { Suspense } from "react";
 import { useSession } from "next-auth/react";
@@ -192,33 +191,41 @@ function DashboardContent() {
   }, [bookmarks, filters, sortBy]);
 
   const handleAddBookmark = async (data: Omit<Bookmark, "id" | "createdAt" | "updatedAt" | "visitCount" | "lastVisitedAt">) => {
-    // Duplicate detection
-    const duplicate = bookmarks.find(b => b.url.toLowerCase() === data.url.toLowerCase() && !b.isDeleted);
-    if (duplicate) {
-      toast.error("Duplicate Bookmark", { 
-        description: `"${duplicate.title}" is already in your vault.`,
-      });
-      return;
-    }
+    // Optimistic UI for Add Bookmark
+    const tempId = `temp-${Date.now()}`;
+    const tempBk: Bookmark = {
+      ...data,
+      id: tempId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      visitCount: 0,
+      lastVisitedAt: null,
+      isDeleted: false,
+      deletedAt: null,
+      isArchived: false,
+    };
 
-    // Use the folderId from the dialog data rather than the active filter
-    const newBk = await addBookmark(data);
-    setBookmarks((prev) => [...prev, newBk]);
-    
-    const folder = folders.find(f => f.id === data.folderId);
-    toast.success("Bookmark saved! 🎉", { 
-      description: folder ? `Added to "${folder.name}"` : `Added to "${data.title}"` 
-    });
-    
-    // Celebration
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"]
-    });
-
+    setBookmarks((prev) => [...prev, tempBk]);
     setShowAddDialog(false);
+    
+    // Background DB save
+    try {
+      const realBk = await addBookmark(data);
+      // Replace temp with real
+      setBookmarks((prev) => prev.map(b => b.id === tempId ? realBk : b));
+      
+      const folder = folders.find(f => f.id === data.folderId);
+      toast.success("Bookmark saved!", { 
+        description: folder ? `Added to "${folder.name}"` : `Added to "${data.title}"` 
+      });
+    } catch (error) {
+      // Rollback
+      setBookmarks((prev) => prev.filter(b => b.id !== tempId));
+      toast.error("Failed to save bookmark", {
+        description: "Please check your connection and try again."
+      });
+      setShowAddDialog(true);
+    }
   };
 
   const handleMoveBookmark = async (bookmarkId: string, folderId: string | null) => {
@@ -238,14 +245,29 @@ function DashboardContent() {
   };
 
   const handleUpdateBookmark = async (id: string, updates: Partial<Bookmark>) => {
-    const updated = await updateBookmark(id, updates);
-    if (updated) setBookmarks((prev) => prev.map((b) => (b.id === id ? updated : b)));
+    const originalBookmarks = [...bookmarks];
+    setBookmarks((prev) => prev.map((b) => (b.id === id ? { ...b, ...updates } : b)));
+    
+    try {
+      const updated = await updateBookmark(id, updates);
+      if (!updated) throw new Error("Update failed");
+    } catch (error) {
+      setBookmarks(originalBookmarks);
+      toast.error("Failed to update bookmark");
+    }
   };
 
   const handleDeleteBookmark = async (id: string) => {
-    await deleteBookmark(id);
-    await loadData(); // Reload to reflect status
+    const originalBookmarks = [...bookmarks];
+    setBookmarks((prev) => prev.filter(b => b.id !== id));
     toast.success("Moved to Trash 🗑️");
+
+    try {
+      await deleteBookmark(id);
+    } catch (error) {
+      setBookmarks(originalBookmarks);
+      toast.error("Failed to delete bookmark");
+    }
   };
 
   const handleRestoreBookmark = async (id: string) => {
